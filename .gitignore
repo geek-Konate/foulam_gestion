@@ -1,0 +1,64 @@
+# ===== Python / Backend =====
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+ENV/
+build/
+dist/
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+*.log
+
+# Poetry
+# On garde poetry.lock (à commiter), on ignore le cache local
+.poetry/
+poetry.toml
+
+# Alembic - on garde les migrations, mais on ignore les fichiers temporaires
+# (ne pas ignorer alembic/versions/)
+
+# ===== Node / Frontend =====
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.pnpm-store/
+
+# Build
+dist/
+build/
+*.local
+
+# Vite
+.vite/
+*.tsbuildinfo
+
+# ===== Environnement / Secrets =====
+.env
+.env.local
+.env.*.local
+*.env
+!.env.example
+
+# ===== IDE / Éditeurs =====
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# ===== OS =====
+.DS_Store
+desktop.ini
