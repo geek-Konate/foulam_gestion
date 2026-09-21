@@ -46,18 +46,37 @@ class Class(BaseModel):
 class Student(BaseModel):
     __tablename__ = "students"
 
+    establishment_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("establishments.id"),
+        nullable=False,
+        index=True,
+    )
+
     first_name: Mapped[str] = mapped_column(String(100), nullable=False)
     last_name: Mapped[str] = mapped_column(String(100), nullable=False)
     birth_date: Mapped[date] = mapped_column(nullable=False)
     gender: Mapped[str] = mapped_column(String(10), nullable=False)
     photo: Mapped[str | None] = mapped_column(String(255), nullable=True)
 
-    enrollments: Mapped[list["Enrollment"]] = relationship(back_populates="student")
-    student_guardians: Mapped[list["StudentGuardian"]] = relationship(back_populates="student")
+    enrollments: Mapped[list["Enrollment"]] = relationship(
+        back_populates="student"
+    )
+
+    student_guardians: Mapped[list["StudentGuardian"]] = relationship(
+        back_populates="student"
+    )
 
 
 class Guardian(BaseModel):
     __tablename__ = "guardians"
+
+    establishment_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("establishments.id"),
+        nullable=False,
+        index=True,
+    )
 
     first_name: Mapped[str] = mapped_column(String(100), nullable=False)
     last_name: Mapped[str] = mapped_column(String(100), nullable=False)
@@ -65,7 +84,9 @@ class Guardian(BaseModel):
     email: Mapped[str | None] = mapped_column(String(255), nullable=True)
     address: Mapped[str | None] = mapped_column(String(255), nullable=True)
 
-    student_guardians: Mapped[list["StudentGuardian"]] = relationship(back_populates="guardian")
+    student_guardians: Mapped[list["StudentGuardian"]] = relationship(
+        back_populates="guardian"
+    )
 
 
 class StudentGuardian(BaseModel):

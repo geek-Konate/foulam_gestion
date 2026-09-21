@@ -1,0 +1,124 @@
+{
+  "navigation": [
+    {
+      "label": "Tableau de bord",
+      "path": "/dashboard",
+      "icon": "Dashboard",
+      "permission": "dashboard.read"
+    },
+    {
+      "label": "Élèves",
+      "path": "/students",
+      "icon": "People",
+      "permission": "student.read"
+    },
+    {
+      "label": "Classes",
+      "path": "/classes",
+      "icon": "Class",
+      "permission": "class.read"
+    },
+    {
+      "label": "Inscriptions",
+      "path": "/enrollments",
+      "icon": "HowToReg",
+      "permission": "enrollment.read"
+    },
+    {
+      "label": "Années scolaires",
+      "path": "/academic-years",
+      "icon": "CalendarMonth",
+      "permission": "academic_year.read"
+    },
+    {
+      "label": "Niveaux",
+      "path": "/levels",
+      "icon": "Layers",
+      "permission": "level.read"
+    },
+    {
+      "label": "Responsables",
+      "path": "/guardians",
+      "icon": "FamilyRestroom",
+      "permission": "guardian.read"
+    },
+    {
+      "label": "Maquettes",
+      "path": "/curriculums",
+      "icon": "AccountTree",
+      "permission": "curriculum.read"
+    },
+    {
+      "label": "Matières",
+      "path": "/subjects",
+      "icon": "MenuBook",
+      "permission": "subject.read"
+    },
+    {
+      "label": "Affectations enseignants",
+      "path": "/teacher-assignments",
+      "icon": "AssignmentInd",
+      "permission": "teacher_assignment.read"
+    },
+    {
+      "label": "Évaluations",
+      "path": "/evaluations",
+      "icon": "Quiz",
+      "permission": "evaluation.read"
+    },
+    {
+      "label": "Notes",
+      "path": "/grades",
+      "icon": "Grade",
+      "permission": "grade.read"
+    },
+    {
+      "label": "Présences",
+      "path": "/attendance",
+      "icon": "FactCheck",
+      "permission": "attendance.read"
+    },
+    {
+      "label": "Bulletins",
+      "path": "/report-cards",
+      "icon": "Description",
+      "permission": "report_card.read"
+    },
+    {
+      "label": "Types de frais",
+      "path": "/fee-types",
+      "icon": "Payments",
+      "permission": "fee_type.read"
+    },
+    {
+      "label": "Paiements",
+      "path": "/payments",
+      "icon": "Payment",
+      "permission": "payment.read"
+    },
+    {
+      "label": "Reçus",
+      "path": "/receipts",
+      "icon": "Receipt",
+      "permission": "receipt.read"
+    },
+    {
+      "label": "Utilisateurs",
+      "path": "/users",
+      "icon": "ManageAccounts",
+      "permission": "user.read"
+    },
+    {
+      "label": "Rôles",
+      "path": "/roles",
+      "icon": "AdminPanelSettings",
+      "permission": "role.manage"
+    },
+    {
+      "label": "Établissement",
+      "path": "/establishment",
+      "icon": "School",
+      "permission": "establishment.read"
+    }
+  ]
+}

@@ -86,6 +86,27 @@ class StudentRepository(BaseRepository[Student]):
 class GuardianRepository(BaseRepository[Guardian]):
     model = Guardian
 
+    async def get_by_establishment(self, establishment_id: uuid.UUID):
+        stmt = select(Guardian).where(
+            Guardian.establishment_id == establishment_id,
+            Guardian.deleted_at.is_(None),
+        )
+
+        result = await self.session.execute(stmt)
+
+        return result.scalars().all()
+
+    async def get_by_email(self, email: str):
+        stmt = select(Guardian).where(
+            Guardian.email == email,
+            Guardian.deleted_at.is_(None),
+        )
+
+        result = await self.session.execute(stmt)
+
+        return result.scalar_one_or_none()
+
+
 
 class StudentGuardianRepository(BaseRepository[StudentGuardian]):
     model = StudentGuardian
@@ -96,6 +117,21 @@ class StudentGuardianRepository(BaseRepository[StudentGuardian]):
         )
         result = await self.session.execute(stmt)
         return list(result.scalars().all())
+
+    async def get_link(
+            self,
+            student_id: uuid.UUID,
+            guardian_id: uuid.UUID,
+    ):
+        stmt = select(StudentGuardian).where(
+            StudentGuardian.student_id == student_id,
+            StudentGuardian.guardian_id == guardian_id,
+            StudentGuardian.deleted_at.is_(None),
+        )
+
+        result = await self.session.execute(stmt)
+
+        return result.scalar_one_or_none()
 
 
 class EnrollmentRepository(BaseRepository[Enrollment]):
@@ -127,3 +163,53 @@ class EnrollmentRepository(BaseRepository[Enrollment]):
         )
         result = await self.session.execute(stmt)
         return list(result.scalars().all())
+
+    async def get_by_student_and_class(
+            self,
+            student_id: uuid.UUID,
+            class_id: uuid.UUID,
+    ):
+        stmt = select(Enrollment).where(
+            Enrollment.student_id == student_id,
+            Enrollment.class_id == class_id,
+            Enrollment.deleted_at.is_(None),
+        )
+
+        result = await self.session.execute(stmt)
+
+        return result.scalar_one_or_none()
+
+    async def get_active_by_student(
+            self,
+            student_id: uuid.UUID,
+    ):
+        stmt = select(Enrollment).where(
+            Enrollment.student_id == student_id,
+            Enrollment.status == "active",
+            Enrollment.deleted_at.is_(None),
+        )
+
+        result = await self.session.execute(stmt)
+
+        return result.scalar_one_or_none()
+
+    async def get_by_establishment(
+            self,
+            establishment_id: uuid.UUID,
+    ):
+        stmt = (
+            select(Enrollment)
+            .join(Class, Enrollment.class_id == Class.id)
+            .join(
+                AcademicYear,
+                Class.academic_year_id == AcademicYear.id,
+            )
+            .where(
+                AcademicYear.establishment_id == establishment_id,
+                Enrollment.deleted_at.is_(None),
+            )
+        )
+
+        result = await self.session.execute(stmt)
+
+        return result.scalars().all()

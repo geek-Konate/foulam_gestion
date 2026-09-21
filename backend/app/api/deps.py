@@ -7,7 +7,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.database import get_db
 from app.core.security import decode_token
 
-from app.repositories.academic import EvaluationRepository, GradeRepository
+from app.repositories.academic import EvaluationRepository, GradeRepository, AttendanceRepository, ReportCardRepository
+from app.repositories.curriculum import CurriculumRepository, CurriculumSubjectRepository, SubjectRepository, \
+    ClassCurriculumRepository, TeacherAssignmentRepository
 from app.repositories.finance import (
     FeeTypeRepository,
     PaymentRepository,
@@ -29,7 +31,7 @@ from app.repositories.rbac import (
 from app.repositories.student import (
     ClassRepository,
     EnrollmentRepository,
-    StudentRepository,
+    StudentRepository, AcademicYearRepository, LevelRepository,
 )
 
 from app.services.enrollment_service import EnrollmentService
@@ -192,3 +194,116 @@ def require_platform_permission(permission_code: str):
         )
 
     return permission_dependency
+
+def get_curriculum_repository(
+    session: AsyncSession = Depends(get_db),
+) -> CurriculumRepository:
+    return CurriculumRepository(session)
+
+
+def get_academic_year_repository(
+    session: AsyncSession = Depends(get_db),
+) -> AcademicYearRepository:
+    return AcademicYearRepository(session)
+
+
+def get_level_repository(
+    session: AsyncSession = Depends(get_db),
+) -> LevelRepository:
+    return LevelRepository(session)
+
+def get_curriculum_subject_repository(
+    session: AsyncSession = Depends(get_db),
+) -> CurriculumSubjectRepository:
+    return CurriculumSubjectRepository(session)
+
+
+def get_subject_repository(
+    session: AsyncSession = Depends(get_db),
+) -> SubjectRepository:
+    return SubjectRepository(session)
+
+def get_class_repository(
+    session: AsyncSession = Depends(get_db),
+) -> ClassRepository:
+    return ClassRepository(session)
+
+
+def get_class_curriculum_repository(
+    session: AsyncSession = Depends(get_db),
+) -> ClassCurriculumRepository:
+    return ClassCurriculumRepository(session)
+
+def get_teacher_assignment_repository(
+    session: AsyncSession = Depends(get_db),
+) -> TeacherAssignmentRepository:
+    return TeacherAssignmentRepository(session)
+
+
+def get_user_repository(
+    session: AsyncSession = Depends(get_db),
+) -> UserRepository:
+    return UserRepository(session)
+
+def get_evaluation_repository(
+    session: AsyncSession = Depends(get_db),
+) -> EvaluationRepository:
+    return EvaluationRepository(session)
+
+def get_grade_repository(
+    session: AsyncSession = Depends(get_db),
+) -> GradeRepository:
+    return GradeRepository(session)
+
+
+def get_evaluation_repository(
+    session: AsyncSession = Depends(get_db),
+) -> EvaluationRepository:
+    return EvaluationRepository(session)
+
+
+def get_student_repository(
+    session: AsyncSession = Depends(get_db),
+) -> StudentRepository:
+    return StudentRepository(session)
+
+
+def get_enrollment_repository(
+    session: AsyncSession = Depends(get_db),
+) -> EnrollmentRepository:
+    return EnrollmentRepository(session)
+
+def get_attendance_repository(
+    session: AsyncSession = Depends(get_db),
+) -> AttendanceRepository:
+    return AttendanceRepository(session)
+
+def get_report_card_repository(
+    session=Depends(get_db),
+):
+    return ReportCardRepository(session)
+
+
+from app.repositories.finance import (
+    FeeTypeRepository,
+    PaymentRepository,
+    ReceiptRepository,
+)
+
+
+def get_fee_type_repository(
+    session=Depends(get_db),
+):
+    return FeeTypeRepository(session)
+
+
+def get_payment_repository(
+    session=Depends(get_db),
+):
+    return PaymentRepository(session)
+
+
+def get_receipt_repository(
+    session=Depends(get_db),
+):
+    return ReceiptRepository(session)

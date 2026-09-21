@@ -20,6 +20,12 @@ class CurriculumRead(TimestampRead):
     name: str
     status: str
 
+class CurriculumUpdate(BaseModel):
+    academic_year_id: uuid.UUID | None = None
+    level_id: uuid.UUID | None = None
+    name: str | None = None
+    status: str | None = None
+
 
 class SubjectCreate(BaseModel):
     name: str
@@ -30,6 +36,9 @@ class SubjectRead(TimestampRead):
     name: str
     code: str
 
+class SubjectUpdate(BaseModel):
+    name: str | None = None
+    description: str | None = None
 
 class CurriculumSubjectCreate(BaseModel):
     curriculum_id: uuid.UUID

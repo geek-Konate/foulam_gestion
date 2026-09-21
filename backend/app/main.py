@@ -59,11 +59,25 @@ async def startup():
     print("🚀 Initialisation School Sync")
     print("════════════════════════════════════")
 
+    try:
+        # 1. Permissions (reçoit la session)
+        async with AsyncSessionLocal() as session:
+            result = await seed_permissions(session)
+            print(
+                f"✅ Permissions : {result['created']} créées, "
+                f"{result['existing']} existantes"
+            )
 
-    await seed_permissions()
-    await seed_superadmin()
+        # 2. Super Admin (gère sa propre session)
+        await seed_superadmin()
+        print("✅ Super Admin prêt")
 
-    print("✅ Initialisation Authentifia App")
+        print("✅ Initialisation Authentifia App")
+
+    except Exception as e:
+        print(f"❌ Erreur lors de l'initialisation : {type(e).__name__}")
+        print(f"Détails : {e}")
+        raise
 
 
 # ────────────────────────────────────────────────

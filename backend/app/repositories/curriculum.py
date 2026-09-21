@@ -10,13 +10,41 @@ class CurriculumRepository(BaseRepository[Curriculum]):
     model = Curriculum
 
     async def get_by_level_and_year(
-        self, level_id: uuid.UUID, academic_year_id: uuid.UUID
+            self,
+            establishment_id: uuid.UUID,
+            level_id: uuid.UUID,
+            academic_year_id: uuid.UUID,
     ) -> Curriculum | None:
         stmt = select(Curriculum).where(
+            Curriculum.establishment_id == establishment_id,
             Curriculum.level_id == level_id,
             Curriculum.academic_year_id == academic_year_id,
             Curriculum.deleted_at.is_(None),
         )
+
+        result = await self.session.execute(stmt)
+        return result.scalar_one_or_none()
+
+    async def get_by_establishment(self, establishment_id):
+        stmt = (
+            select(Curriculum)
+            .where(
+                Curriculum.establishment_id == establishment_id,
+                Curriculum.deleted_at.is_(None),
+            )
+            .order_by(Curriculum.name.asc())
+        )
+
+        result = await self.session.execute(stmt)
+        return result.scalars().all()
+
+    async def get_by_name(self, establishment_id, name):
+        stmt = select(Curriculum).where(
+            Curriculum.establishment_id == establishment_id,
+            Curriculum.name == name,
+            Curriculum.deleted_at.is_(None),
+        )
+
         result = await self.session.execute(stmt)
         return result.scalar_one_or_none()
 
@@ -29,7 +57,15 @@ class SubjectRepository(BaseRepository[Subject]):
         result = await self.session.execute(stmt)
         return result.scalar_one_or_none()
 
+    async def get_by_name(self, name: str):
+        stmt = select(Subject).where(
+            Subject.name == name,
+            Subject.deleted_at.is_(None),
+        )
 
+        result = await self.session.execute(stmt)
+
+        return result.scalar_one_or_none()
 class CurriculumSubjectRepository(BaseRepository[CurriculumSubject]):
     model = CurriculumSubject
 

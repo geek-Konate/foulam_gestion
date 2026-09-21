@@ -1,11 +1,29 @@
-import React from 'react';
+import { CssBaseline, ThemeProvider as MuiThemeProvider } from '@mui/material';
 
-const App = () => {
+import { useContext } from 'react';
+import { AuthProvider } from './context/AuthContext';
+import { ThemeContext, ThemeProvider } from './context/ThemeContext';
+import AppRoutes from './routes/AppRoutes';
+
+function AppContent() {
+  const { theme } = useContext(ThemeContext);
+
   return (
-    <div>
-      <h1 className="text-gray-200">salut</h1>
-    </div>
+    <MuiThemeProvider theme={theme}>
+      <CssBaseline />
+      <AppRoutes />
+    </MuiThemeProvider>
   );
-};
+}
+
+function App() {
+  return (
+    <ThemeProvider>
+      <AuthProvider>
+        <AppContent />
+      </AuthProvider>
+    </ThemeProvider>
+  );
+}
 
 export default App;

@@ -1,7 +1,7 @@
 import uuid
 from datetime import date
 
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, ConfigDict
 
 from app.schemas.base import TimestampRead
 
@@ -29,6 +29,11 @@ class AcademicYearUpdate(BaseModel):
 class LevelCreate(BaseModel):
     name: str
     category: str
+
+
+class LevelUpdate(BaseModel):
+    name: str | None = None
+    category: str | None = None
 
 
 class LevelRead(TimestampRead):
@@ -85,12 +90,23 @@ class GuardianCreate(BaseModel):
     address: str | None = None
 
 
+class GuardianUpdate(BaseModel):
+    first_name: str | None = None
+    last_name: str | None = None
+    phone: str | None = None
+    email: EmailStr | None = None
+    address: str | None = None
+
+
 class GuardianRead(TimestampRead):
+    establishment_id: uuid.UUID
     first_name: str
     last_name: str
     phone: str | None
     email: EmailStr | None
     address: str | None
+
+    model_config = ConfigDict(from_attributes=True)
 
 
 class StudentGuardianCreate(BaseModel):

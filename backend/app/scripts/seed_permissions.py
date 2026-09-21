@@ -1,412 +1,582 @@
-# app/scripts/seed_permissions.py
-
-import asyncio
-
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.database import AsyncSessionLocal
-from app.models.rbac import Permission, Role, RolePermission
-from app.schemas.rbac import ScopeType
+from app.models.rbac import Permission
 
-
-# ═══════════════════════════════════════════════════════
-# PERMISSIONS SYSTÈME
-# ═══════════════════════════════════════════════════════
 
 PERMISSIONS = [
-    # ─────────────────────────────────────────────
+    # ============================================================
     # ONBOARDING
-    # ─────────────────────────────────────────────
-    (
-        "onboarding.review",
-        "Approuver ou rejeter une demande d'onboarding",
-        "onboarding",
-    ),
-
-    # ─────────────────────────────────────────────
-    # ORGANIZATION / SAAS
-    # ─────────────────────────────────────────────
-
-    ("organization.create", "Créer une organisation", "organization"),
-    ("organization.read", "Consulter une organisation", "organization"),
-    ("organization.update", "Modifier une organisation", "organization"),
-    ("organization.delete", "Supprimer une organisation", "organization"),
-
-    ("subscription.create", "Créer un abonnement", "organization"),
-    ("subscription.read", "Consulter un abonnement", "organization"),
-    ("subscription.update", "Modifier un abonnement", "organization"),
-    ("subscription.delete", "Supprimer un abonnement", "organization"),
-
-    ("establishment.create", "Créer un établissement", "organization"),
-    ("establishment.read", "Consulter un établissement", "organization"),
-    ("establishment.update", "Modifier un établissement", "organization"),
-    ("establishment.delete", "Supprimer un établissement", "organization"),
-
-    # ─────────────────────────────────────────────
-    # RBAC
-    # ─────────────────────────────────────────────
-    ("user.create", "Créer un utilisateur", "rbac"),
-    ("user.read", "Consulter un utilisateur", "rbac"),
-    ("user.update", "Modifier un utilisateur", "rbac"),
-    ("user.delete", "Supprimer un utilisateur", "rbac"),
-
-    ("role.manage", "Gérer les rôles et permissions", "rbac"),
-    ("role.assign", "Assigner un rôle à un utilisateur", "rbac"),
-
-    # ─────────────────────────────────────────────
-    # STRUCTURE SCOLAIRE
-    # ─────────────────────────────────────────────
-    (
-        "academic_year.create",
-        "Créer une année académique",
-        "academic_structure",
-    ),
-    (
-        "academic_year.read",
-        "Consulter les années académiques",
-        "academic_structure",
-    ),
-    (
-        "academic_year.update",
-        "Modifier une année académique",
-        "academic_structure",
-    ),
-    (
-        "academic_year.delete",
-        "Supprimer une année académique",
-        "academic_structure",
-    ),
-    (
-        "class.create",
-        "Créer une classe",
-        "academic_structure",
-    ),
-    (
-        "class.read",
-        "Consulter une classe",
-        "academic_structure",
-    ),
-    (
-        "class.update",
-        "Modifier une classe",
-        "academic_structure",
-    ),
-
-    # ─────────────────────────────────────────────
-    # ÉLÈVES
-    # ─────────────────────────────────────────────
-    ("student.create", "Créer un élève", "student"),
-    ("student.read", "Consulter un élève", "student"),
-    ("student.update", "Modifier un élève", "student"),
-    (
-        "student.enroll",
-        "Inscrire un élève dans une classe",
-        "student",
-    ),
-
-    ("guardian.create", "Créer un tuteur", "student"),
-    ("guardian.read", "Consulter un tuteur", "student"),
-
-    # ─────────────────────────────────────────────
-    # MAQUETTE PÉDAGOGIQUE
-    # ─────────────────────────────────────────────
-    (
-        "curriculum.create",
-        "Créer une maquette pédagogique",
-        "curriculum",
-    ),
-    (
-        "curriculum.read",
-        "Consulter une maquette pédagogique",
-        "curriculum",
-    ),
-    (
-        "subject.create",
-        "Créer une matière",
-        "curriculum",
-    ),
-    (
-        "teacher_assignment.create",
-        "Affecter un enseignant",
-        "curriculum",
-    ),
-
-    # ─────────────────────────────────────────────
-    # NOTES / PRÉSENCES
-    # ─────────────────────────────────────────────
-    (
-        "evaluation.create",
-        "Créer une évaluation",
-        "academic",
-    ),
-    (
-        "evaluation.read",
-        "Consulter une évaluation",
-        "academic",
-    ),
-
-    ("grade.create", "Saisir une note", "academic"),
-    ("grade.update", "Modifier une note", "academic"),
-    ("grade.read", "Consulter une note", "academic"),
-
-    (
-        "attendance.create",
-        "Saisir une présence/absence",
-        "academic",
-    ),
-    (
-        "attendance.read",
-        "Consulter les présences",
-        "academic",
-    ),
-
-    (
-        "report_card.generate",
-        "Générer un bulletin",
-        "academic",
-    ),
-    (
-        "report_card.read",
-        "Consulter un bulletin",
-        "academic",
-    ),
-
-    # ─────────────────────────────────────────────
-    # FINANCE
-    # ─────────────────────────────────────────────
-    (
-        "fee_type.create",
-        "Créer un type de frais",
-        "finance",
-    ),
-    (
-        "fee_type.read",
-        "Consulter les types de frais",
-        "finance",
-    ),
-
-    (
-        "payment.create",
-        "Enregistrer un paiement",
-        "finance",
-    ),
-    (
-        "payment.read",
-        "Consulter les paiements",
-        "finance",
-    ),
-
-    (
-        "receipt.read",
-        "Consulter un reçu",
-        "finance",
-    ),
-]
-
-
-# ═══════════════════════════════════════════════════════
-# RÔLES SYSTÈME
-# ═══════════════════════════════════════════════════════
-
-SYSTEM_ROLES = [
+    # ============================================================
     {
-        "name": "Super Admin",
-        "description": "Administrateur global de la plateforme SaaS",
-        "scope_type": ScopeType.PLATFORM,
-            "is_system": True,
+        "code": "onboarding.review",
+        "name": "Examiner les demandes d'inscription",
+        "module": "onboarding",
+        "description": "Permet d'accepter ou de refuser les demandes d'inscription.",
+    },
+
+    # ============================================================
+    # ORGANIZATION
+    # ============================================================
+    {
+        "code": "organization.create",
+        "name": "Créer une organisation",
+        "module": "organization",
+        "description": "Permet de créer une organisation.",
+    },
+    {
+        "code": "organization.read",
+        "name": "Consulter les organisations",
+        "module": "organization",
+        "description": "Permet de consulter les organisations.",
+    },
+    {
+        "code": "organization.update",
+        "name": "Modifier une organisation",
+        "module": "organization",
+        "description": "Permet de modifier une organisation.",
+    },
+    {
+        "code": "organization.delete",
+        "name": "Supprimer une organisation",
+        "module": "organization",
+        "description": "Permet de supprimer une organisation.",
+    },
+
+    # ============================================================
+    # SUBSCRIPTION
+    # ============================================================
+    {
+        "code": "subscription.create",
+        "name": "Créer un abonnement",
+        "module": "subscription",
+        "description": "Permet de créer un abonnement.",
+    },
+    {
+        "code": "subscription.read",
+        "name": "Consulter les abonnements",
+        "module": "subscription",
+        "description": "Permet de consulter les abonnements.",
+    },
+    {
+        "code": "subscription.update",
+        "name": "Modifier un abonnement",
+        "module": "subscription",
+        "description": "Permet de modifier un abonnement.",
+    },
+    {
+        "code": "subscription.delete",
+        "name": "Supprimer un abonnement",
+        "module": "subscription",
+        "description": "Permet de supprimer un abonnement.",
+    },
+
+    # ============================================================
+    # ESTABLISHMENT
+    # ============================================================
+    {
+        "code": "establishment.create",
+        "name": "Créer un établissement",
+        "module": "establishment",
+        "description": "Permet de créer un établissement.",
+    },
+    {
+        "code": "establishment.read",
+        "name": "Consulter les établissements",
+        "module": "establishment",
+        "description": "Permet de consulter les établissements.",
+    },
+    {
+        "code": "establishment.update",
+        "name": "Modifier un établissement",
+        "module": "establishment",
+        "description": "Permet de modifier un établissement.",
+    },
+    {
+        "code": "establishment.delete",
+        "name": "Supprimer un établissement",
+        "module": "establishment",
+        "description": "Permet de supprimer un établissement.",
+    },
+
+    # ============================================================
+    # USER
+    # ============================================================
+    {
+        "code": "user.create",
+        "name": "Créer un utilisateur",
+        "module": "user",
+        "description": "Permet de créer un utilisateur.",
+    },
+    {
+        "code": "user.read",
+        "name": "Consulter les utilisateurs",
+        "module": "user",
+        "description": "Permet de consulter les utilisateurs.",
+    },
+    {
+        "code": "user.update",
+        "name": "Modifier un utilisateur",
+        "module": "user",
+        "description": "Permet de modifier un utilisateur.",
+    },
+    {
+        "code": "user.delete",
+        "name": "Supprimer un utilisateur",
+        "module": "user",
+        "description": "Permet de supprimer un utilisateur.",
+    },
+
+    # ============================================================
+    # ROLE / RBAC
+    # ============================================================
+    {
+        "code": "role.manage",
+        "name": "Gérer les rôles",
+        "module": "role",
+        "description": "Permet de créer, modifier et supprimer les rôles.",
+    },
+    {
+        "code": "role.assign",
+        "name": "Attribuer les rôles",
+        "module": "role",
+        "description": "Permet d'attribuer des rôles aux utilisateurs.",
+    },
+
+    # ============================================================
+    # ACADEMIC YEAR
+    # ============================================================
+    {
+        "code": "academic_year.create",
+        "name": "Créer une année scolaire",
+        "module": "academic_year",
+        "description": "Permet de créer une année scolaire.",
+    },
+    {
+        "code": "academic_year.read",
+        "name": "Consulter les années scolaires",
+        "module": "academic_year",
+        "description": "Permet de consulter les années scolaires.",
+    },
+    {
+        "code": "academic_year.update",
+        "name": "Modifier une année scolaire",
+        "module": "academic_year",
+        "description": "Permet de modifier une année scolaire.",
+    },
+    {
+        "code": "academic_year.delete",
+        "name": "Supprimer une année scolaire",
+        "module": "academic_year",
+        "description": "Permet de supprimer une année scolaire.",
+    },
+
+    # ============================================================
+    # LEVEL
+    # ============================================================
+    {
+        "code": "level.create",
+        "name": "Créer un niveau",
+        "module": "level",
+        "description": "Permet de créer un niveau.",
+    },
+    {
+        "code": "level.read",
+        "name": "Consulter les niveaux",
+        "module": "level",
+        "description": "Permet de consulter les niveaux.",
+    },
+    {
+        "code": "level.update",
+        "name": "Modifier un niveau",
+        "module": "level",
+        "description": "Permet de modifier un niveau.",
+    },
+    {
+        "code": "level.delete",
+        "name": "Supprimer un niveau",
+        "module": "level",
+        "description": "Permet de supprimer un niveau.",
+    },
+
+    # ============================================================
+    # CLASS
+    # ============================================================
+    {
+        "code": "class.create",
+        "name": "Créer une classe",
+        "module": "class",
+        "description": "Permet de créer une classe.",
+    },
+    {
+        "code": "class.read",
+        "name": "Consulter les classes",
+        "module": "class",
+        "description": "Permet de consulter les classes.",
+    },
+    {
+        "code": "class.update",
+        "name": "Modifier une classe",
+        "module": "class",
+        "description": "Permet de modifier une classe.",
+    },
+    {
+        "code": "class.delete",
+        "name": "Supprimer une classe",
+        "module": "class",
+        "description": "Permet de supprimer une classe.",
+    },
+
+    # ============================================================
+    # STUDENT
+    # ============================================================
+    {
+        "code": "student.create",
+        "name": "Créer un élève",
+        "module": "student",
+        "description": "Permet d'enregistrer un élève.",
+    },
+    {
+        "code": "student.read",
+        "name": "Consulter les élèves",
+        "module": "student",
+        "description": "Permet de consulter les élèves.",
+    },
+    {
+        "code": "student.update",
+        "name": "Modifier un élève",
+        "module": "student",
+        "description": "Permet de modifier les informations d'un élève.",
+    },
+    {
+        "code": "student.enroll",
+        "name": "Inscrire un élève",
+        "module": "student",
+        "description": "Permet d'inscrire un élève dans une classe.",
+    },
+    {
+        "code": "student.delete",
+        "name": "Supprimer un élève",
+        "module": "student",
+        "description": "Permet de supprimer un élève.",
+    },
+
+    # ============================================================
+    # GUARDIAN
+    # ============================================================
+    {
+        "code": "guardian.create",
+        "name": "Créer un responsable",
+        "module": "guardian",
+        "description": "Permet d'enregistrer un responsable.",
+    },
+    {
+        "code": "guardian.read",
+        "name": "Consulter les responsables",
+        "module": "guardian",
+        "description": "Permet de consulter les responsables.",
+    },
+    {
+        "code": "guardian.update",
+        "name": "Modifier un responsable",
+        "module": "guardian",
+        "description": "Permet de modifier un responsable.",
+    },
+    {
+        "code": "guardian.delete",
+        "name": "Supprimer un responsable",
+        "module": "guardian",
+        "description": "Permet de supprimer un responsable.",
+    },
+
+    # ============================================================
+    # CURRICULUM
+    # ============================================================
+    {
+        "code": "curriculum.create",
+        "name": "Créer une maquette",
+        "module": "curriculum",
+        "description": "Permet de créer une maquette pédagogique.",
+    },
+    {
+        "code": "curriculum.read",
+        "name": "Consulter les maquettes",
+        "module": "curriculum",
+        "description": "Permet de consulter les maquettes pédagogiques.",
+    },
+    {
+        "code": "curriculum.update",
+        "name": "Modifier une maquette",
+        "module": "curriculum",
+        "description": "Permet de modifier une maquette pédagogique.",
+    },
+    {
+        "code": "curriculum.delete",
+        "name": "Supprimer une maquette",
+        "module": "curriculum",
+        "description": "Permet de supprimer une maquette pédagogique.",
+    },
+
+    # ============================================================
+    # SUBJECT
+    # ============================================================
+    {
+        "code": "subject.create",
+        "name": "Créer une matière",
+        "module": "subject",
+        "description": "Permet de créer une matière.",
+    },
+    {
+        "code": "subject.read",
+        "name": "Consulter les matières",
+        "module": "subject",
+        "description": "Permet de consulter les matières.",
+    },
+    {
+        "code": "subject.update",
+        "name": "Modifier une matière",
+        "module": "subject",
+        "description": "Permet de modifier une matière.",
+    },
+    {
+        "code": "subject.delete",
+        "name": "Supprimer une matière",
+        "module": "subject",
+        "description": "Permet de supprimer une matière.",
+    },
+
+    # ============================================================
+    # TEACHER ASSIGNMENT
+    # ============================================================
+    {
+        "code": "teacher_assignment.create",
+        "name": "Affecter un enseignant",
+        "module": "teacher_assignment",
+        "description": "Permet d'affecter un enseignant à une classe et une matière.",
+    },
+    {
+        "code": "teacher_assignment.read",
+        "name": "Consulter les affectations",
+        "module": "teacher_assignment",
+        "description": "Permet de consulter les affectations des enseignants.",
+    },
+    {
+        "code": "teacher_assignment.delete",
+        "name": "Supprimer une affectation",
+        "module": "teacher_assignment",
+        "description": "Permet de supprimer une affectation.",
+    },
+
+    # ============================================================
+    # EVALUATION
+    # ============================================================
+    {
+        "code": "evaluation.create",
+        "name": "Créer une évaluation",
+        "module": "evaluation",
+        "description": "Permet de créer une évaluation.",
+    },
+    {
+        "code": "evaluation.read",
+        "name": "Consulter les évaluations",
+        "module": "evaluation",
+        "description": "Permet de consulter les évaluations.",
+    },
+    {
+        "code": "evaluation.delete",
+        "name": "Supprimer une évaluation",
+        "module": "evaluation",
+        "description": "Permet de supprimer une évaluation.",
+    },
+
+    # ============================================================
+    # GRADE
+    # ============================================================
+    {
+        "code": "grade.create",
+        "name": "Saisir une note",
+        "module": "grade",
+        "description": "Permet de saisir une note.",
+    },
+    {
+        "code": "grade.update",
+        "name": "Modifier une note",
+        "module": "grade",
+        "description": "Permet de modifier une note.",
+    },
+    {
+        "code": "grade.read",
+        "name": "Consulter les notes",
+        "module": "grade",
+        "description": "Permet de consulter les notes.",
+    },
+
+    # ============================================================
+    # ATTENDANCE
+    # ============================================================
+    {
+        "code": "attendance.create",
+        "name": "Enregistrer une présence",
+        "module": "attendance",
+        "description": "Permet d'enregistrer une présence ou une absence.",
+    },
+    {
+        "code": "attendance.read",
+        "name": "Consulter les présences",
+        "module": "attendance",
+        "description": "Permet de consulter les présences et absences.",
+    },
+    {
+        "code": "attendance.update",
+        "name": "Modifier une présence",
+        "module": "attendance",
+        "description": "Permet de modifier une présence ou une absence.",
+    },
+    {
+        "code": "attendance.delete",
+        "name": "Supprimer une présence",
+        "module": "attendance",
+        "description": "Permet de supprimer une présence ou une absence.",
+    },
+
+    # ============================================================
+    # REPORT CARD
+    # ============================================================
+    {
+        "code": "report_card.generate",
+        "name": "Générer un bulletin",
+        "module": "report_card",
+        "description": "Permet de générer un bulletin scolaire.",
+    },
+    {
+        "code": "report_card.read",
+        "name": "Consulter les bulletins",
+        "module": "report_card",
+        "description": "Permet de consulter les bulletins scolaires.",
+    },
+
+    # ============================================================
+    # ENROLLMENT
+    # ============================================================
+    {
+        "code": "enrollment.create",
+        "name": "Créer une inscription",
+        "module": "enrollment",
+        "description": "Permet de créer une inscription dans une classe.",
+    },
+    {
+        "code": "enrollment.read",
+        "name": "Consulter les inscriptions",
+        "module": "enrollment",
+        "description": "Permet de consulter les inscriptions.",
+    },
+    {
+        "code": "enrollment.update",
+        "name": "Modifier une inscription",
+        "module": "enrollment",
+        "description": "Permet de modifier une inscription.",
+    },
+    {
+        "code": "enrollment.delete",
+        "name": "Supprimer une inscription",
+        "module": "enrollment",
+        "description": "Permet de supprimer une inscription.",
+    },
+
+    # ============================================================
+    # FEE TYPE
+    # ============================================================
+    {
+        "code": "fee_type.create",
+        "name": "Créer un type de frais",
+        "module": "fee_type",
+        "description": "Permet de créer un type de frais scolaire.",
+    },
+    {
+        "code": "fee_type.read",
+        "name": "Consulter les types de frais",
+        "module": "fee_type",
+        "description": "Permet de consulter les types de frais scolaires.",
+    },
+
+    # ============================================================
+    # PAYMENT
+    # ============================================================
+    {
+        "code": "payment.create",
+        "name": "Enregistrer un paiement",
+        "module": "payment",
+        "description": "Permet d'enregistrer un paiement.",
+    },
+    {
+        "code": "payment.read",
+        "name": "Consulter les paiements",
+        "module": "payment",
+        "description": "Permet de consulter les paiements.",
+    },
+    {
+        "code": "payment.delete",
+        "name": "Supprimer un paiement",
+        "module": "payment",
+        "description": "Permet de supprimer un paiement.",
+    },
+
+    # ============================================================
+    # RECEIPT
+    # ============================================================
+    {
+        "code": "receipt.read",
+        "name": "Consulter les reçus",
+        "module": "receipt",
+        "description": "Permet de consulter les reçus de paiement.",
+    },
+
+    # ============================================================
+    # DASHBOARD
+    # ============================================================
+    {
+        "code": "dashboard.read",
+        "name": "Consulter le tableau de bord",
+        "module": "dashboard",
+        "description": "Permet de consulter les tableaux de bord.",
     },
 ]
 
 
-# ═══════════════════════════════════════════════════════
-# SEED PERMISSIONS
-# ═══════════════════════════════════════════════════════
+SYSTEM_ROLES = {
+    "super_admin": {
+        "name": "Super Admin",
+        "description": "Administrateur global de la plateforme.",
+        "scope_type": "PLATFORM",
+    },
+}
 
-async def create_permissions(session) -> dict[str, Permission]:
-    """
-    Crée les permissions manquantes.
 
-    Retourne toutes les permissions sous forme :
-        {
-            "permission.code": Permission
-        }
-    """
-
-    result = await session.execute(
-        select(Permission)
-    )
-
-    permissions = {
-        permission.code: permission
-        for permission in result.scalars().all()
-    }
-
+async def seed_permissions(session: AsyncSession) -> dict:
     created = 0
+    existing = 0
 
-    for code, name, module in PERMISSIONS:
-
-        if code in permissions:
-            continue
-
-        permission = Permission(
-            code=code,
-            name=name,
-            module=module,
+    for permission_data in PERMISSIONS:
+        result = await session.execute(
+            select(Permission).where(
+                Permission.code == permission_data["code"]
+            )
         )
 
+        permission = result.scalar_one_or_none()
+
+        if permission:
+            existing += 1
+            continue
+
+        permission = Permission(**permission_data)
         session.add(permission)
-        permissions[code] = permission
         created += 1
 
-    if created:
-        await session.flush()
+    await session.commit()
 
-    print(
-        f"✅ Permissions : {created} créée(s), "
-        f"{len(PERMISSIONS) - created} déjà existante(s)."
-    )
-
-    return permissions
-
-
-# ═══════════════════════════════════════════════════════
-# SEED RÔLES
-# ═══════════════════════════════════════════════════════
-
-async def seed_roles(session) -> dict[str, Role]:
-    """
-    Crée les rôles système manquants.
-    """
-
-    result = await session.execute(
-        select(Role)
-    )
-
-    roles = {
-        role.name: role
-        for role in result.scalars().all()
+    return {
+        "created": created,
+        "existing": existing,
+        "total": len(PERMISSIONS),
     }
-
-    created = 0
-
-    for role_data in SYSTEM_ROLES:
-
-        role_name = role_data["name"]
-
-        if role_name in roles:
-            continue
-
-        role = Role(
-            name=role_data["name"],
-            description=role_data["description"],
-            scope_type=role_data["scope_type"],
-            is_system=role_data["is_system"],
-        )
-
-        session.add(role)
-        roles[role_name] = role
-        created += 1
-
-    if created:
-        await session.flush()
-
-    print(
-        f"✅ Rôles : {created} créé(s), "
-        f"{len(SYSTEM_ROLES) - created} déjà existant(s)."
-    )
-
-    return roles
-
-
-# ═══════════════════════════════════════════════════════
-# SUPER ADMIN → PERMISSIONS
-# ═══════════════════════════════════════════════════════
-
-async def seed_superadmin_permissions(
-    session,
-    roles: dict[str, Role],
-    permissions: dict[str, Permission],
-) -> None:
-    """
-    Donne toutes les permissions au Super Admin.
-    """
-
-    superadmin_role = roles.get("Super Admin")
-
-    if not superadmin_role:
-        raise RuntimeError(
-            "Le rôle 'Super Admin' n'existe pas."
-        )
-
-    result = await session.execute(
-        select(RolePermission.permission_id).where(
-            RolePermission.role_id == superadmin_role.id
-        )
-    )
-
-    existing_permission_ids = {
-        permission_id
-        for permission_id in result.scalars().all()
-    }
-
-    created = 0
-
-    for permission in permissions.values():
-
-        if permission.id in existing_permission_ids:
-            continue
-
-        session.add(
-            RolePermission(
-                role_id=superadmin_role.id,
-                permission_id=permission.id,
-            )
-        )
-
-        created += 1
-
-    if created:
-        await session.flush()
-
-    print(
-        f"✅ Permissions Super Admin : "
-        f"{created} ajoutée(s)."
-    )
-
-
-# ═══════════════════════════════════════════════════════
-# SEED GLOBAL
-# ═══════════════════════════════════════════════════════
-
-async def seed_permissions() -> None:
-
-    async with AsyncSessionLocal() as session:
-
-        try:
-            permissions = await create_permissions(session)
-
-            roles = await seed_roles(session)
-
-            await seed_superadmin_permissions(
-                session,
-                roles,
-                permissions,
-            )
-
-            await session.commit()
-
-            print("════════════════════════════════════")
-            print("✅ Seed RBAC terminé avec succès")
-            print("════════════════════════════════════")
-
-        except Exception:
-            await session.rollback()
-            raise
-
-
-# ═══════════════════════════════════════════════════════
-# EXECUTION DIRECTE
-# ═══════════════════════════════════════════════════════
-
-if __name__ == "__main__":
-    asyncio.run(seed_permissions())

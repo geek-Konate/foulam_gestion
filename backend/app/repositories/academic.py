@@ -16,6 +16,18 @@ class EvaluationRepository(BaseRepository[Evaluation]):
         result = await self.session.execute(stmt)
         return list(result.scalars().all())
 
+    async def get_by_class(
+            self,
+            class_id: uuid.UUID,
+    ) -> list[Evaluation]:
+        stmt = select(Evaluation).where(
+            Evaluation.class_id == class_id,
+            Evaluation.deleted_at.is_(None),
+        ).order_by(Evaluation.date.desc())
+
+        result = await self.session.execute(stmt)
+        return list(result.scalars().all())
+
 
 class GradeRepository(BaseRepository[Grade]):
     model = Grade

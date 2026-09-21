@@ -1,7 +1,7 @@
 import uuid
 from datetime import date, datetime
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 
 from app.schemas.base import TimestampRead
 
@@ -21,7 +21,7 @@ class EvaluationRead(TimestampRead):
     period: str
     date: date
 
-
+    model_config = ConfigDict(from_attributes=True)
 class GradeCreate(BaseModel):
     evaluation_id: uuid.UUID
     student_id: uuid.UUID
@@ -58,6 +58,9 @@ class AttendanceRead(TimestampRead):
     status: str
     remark: str | None
 
+class AttendanceUpdate(BaseModel):
+    status: str | None = None
+    remark: str | None = None
 
 class ReportCardCreate(BaseModel):
     student_id: uuid.UUID

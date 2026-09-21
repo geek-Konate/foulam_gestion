@@ -18,6 +18,15 @@ class FeeTypeRead(TimestampRead):
     name: str
     amount: Decimal
 
+class FeeTypeUpdate(BaseModel):
+    name: str
+    amount: Decimal
+
+class StudentFinancialSummary(BaseModel):
+    student_id: uuid.UUID
+    total_due: Decimal
+    total_paid: Decimal
+    remaining: Decimal
 
 class PaymentCreate(BaseModel):
     student_id: uuid.UUID

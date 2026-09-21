@@ -40,6 +40,7 @@ class UserRead(TimestampRead):
     email: EmailStr
     phone: str | None
     status: str
+    permissions: list[str] = []
 
 
 # ─────────────────────────────────────────────
