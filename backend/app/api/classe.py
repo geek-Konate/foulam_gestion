@@ -46,6 +46,7 @@ async def create_class(
     await rbac_service.require_permission(
         current_user_id,
         "class.create",
+        establishment_id=establishment_id,
     )
 
     return await class_service.create_class(
@@ -68,6 +69,7 @@ async def list_classes(
     await rbac_service.require_permission(
         current_user_id,
         "class.read",
+        establishment_id=establishment_id,
     )
 
     return await class_service.list_classes(
@@ -90,6 +92,7 @@ async def get_class(
     await rbac_service.require_permission(
         current_user_id,
         "class.read",
+        establishment_id=establishment_id,
     )
 
     return await class_service.get_class(
@@ -113,6 +116,7 @@ async def update_class(
     await rbac_service.require_permission(
         current_user_id,
         "class.update",
+        establishment_id=establishment_id,
     )
 
     return await class_service.update_class(
@@ -136,6 +140,7 @@ async def delete_class(
     await rbac_service.require_permission(
         current_user_id,
         "class.delete",
+        establishment_id=establishment_id,
     )
 
     return await class_service.delete_class(

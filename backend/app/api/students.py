@@ -40,6 +40,7 @@ async def create_student(
     await rbac_service.require_permission(
         current_user_id,
         "student.create",
+        establishment_id=establishment_id,
     )
 
     return await student_service.create_student(
@@ -61,6 +62,7 @@ async def list_students(
     await rbac_service.require_permission(
         current_user_id,
         "student.read",
+        establishment_id=establishment_id,
     )
 
     return await student_service.list_students(
@@ -82,6 +84,7 @@ async def get_student(
     await rbac_service.require_permission(
         current_user_id,
         "student.read",
+        establishment_id=establishment_id,
     )
 
     return await student_service.get_student(
@@ -105,6 +108,7 @@ async def update_student(
     await rbac_service.require_permission(
         current_user_id,
         "student.update",
+        establishment_id=establishment_id,
     )
 
     return await student_service.update_student(
@@ -128,6 +132,7 @@ async def delete_student(
     await rbac_service.require_permission(
         current_user_id,
         "student.delete",
+        establishment_id=establishment_id,
     )
 
     return await student_service.delete_student(

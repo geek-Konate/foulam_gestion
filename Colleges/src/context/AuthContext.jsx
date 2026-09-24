@@ -6,6 +6,7 @@ export const AuthContext = createContext(null);
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [permissions, setPermissions] = useState([]);
+  const [scope, setScope] = useState(null);
   const [loading, setLoading] = useState(true);
 
   const loadCurrentUser = async () => {
@@ -14,6 +15,7 @@ export function AuthProvider({ children }) {
     if (!token) {
       setUser(null);
       setPermissions([]);
+      setScope(null);
       setLoading(false);
       return;
     }
@@ -23,10 +25,12 @@ export function AuthProvider({ children }) {
 
       setUser(response.data);
       setPermissions(response.data.permissions || []);
+      setScope(response.data.scope || null);
     } catch (error) {
       localStorage.removeItem('token');
       setUser(null);
       setPermissions([]);
+      setScope(null);
     } finally {
       setLoading(false);
     }
@@ -53,7 +57,10 @@ export function AuthProvider({ children }) {
     localStorage.removeItem('token');
     setUser(null);
     setPermissions([]);
+    setScope(null);
   };
+
+  const isPlatform = scope === 'PLATFORM';
 
   const hasPermission = (permission) => {
     return permissions.includes(permission);
@@ -63,12 +70,14 @@ export function AuthProvider({ children }) {
     () => ({
       user,
       permissions,
+      scope,
+      isPlatform,
       loading,
       login,
       logout,
       hasPermission,
     }),
-    [user, permissions, loading]
+    [user, permissions, scope, isPlatform, loading]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

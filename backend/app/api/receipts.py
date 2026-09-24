@@ -3,11 +3,11 @@ import uuid
 from fastapi import APIRouter, Depends, status
 
 from app.api.deps import (
-    get_current_user,
+    get_current_user_id,
     get_receipt_repository,
     get_payment_repository,
     get_student_repository,
-    require_organization_permission as require_permission,
+    get_rbac_service,
 )
 
 from app.repositories.finance import (
@@ -23,6 +23,7 @@ from app.schemas.finance import (
 )
 
 from app.services.receipt import ReceiptService
+from app.services.rbac_service import RbacService
 
 
 router = APIRouter()
@@ -57,9 +58,15 @@ async def create_receipt(
     service: ReceiptService = Depends(
         get_receipt_service
     ),
-    current_user=Depends(get_current_user),
-    _=Depends(require_permission("receipt.create")),
+    current_user_id: uuid.UUID = Depends(get_current_user_id),
+    rbac_service: RbacService = Depends(get_rbac_service),
 ):
+    await rbac_service.require_permission(
+        user_id=current_user_id,
+        permission_code="receipt.create",
+        establishment_id=establishment_id,
+    )
+
     return await service.create(
         establishment_id=establishment_id,
         data=data,
@@ -76,9 +83,15 @@ async def get_receipt(
     service: ReceiptService = Depends(
         get_receipt_service
     ),
-    current_user=Depends(get_current_user),
-    _=Depends(require_permission("receipt.read")),
+    current_user_id: uuid.UUID = Depends(get_current_user_id),
+    rbac_service: RbacService = Depends(get_rbac_service),
 ):
+    await rbac_service.require_permission(
+        user_id=current_user_id,
+        permission_code="receipt.read",
+        establishment_id=establishment_id,
+    )
+
     return await service.get(
         establishment_id=establishment_id,
         receipt_id=receipt_id,
@@ -95,9 +108,15 @@ async def get_payment_receipt(
     service: ReceiptService = Depends(
         get_receipt_service
     ),
-    current_user=Depends(get_current_user),
-    _=Depends(require_permission("receipt.read")),
+    current_user_id: uuid.UUID = Depends(get_current_user_id),
+    rbac_service: RbacService = Depends(get_rbac_service),
 ):
+    await rbac_service.require_permission(
+        user_id=current_user_id,
+        permission_code="receipt.read",
+        establishment_id=establishment_id,
+    )
+
     return await service.get_by_payment(
         establishment_id=establishment_id,
         payment_id=payment_id,
@@ -114,9 +133,15 @@ async def delete_receipt(
     service: ReceiptService = Depends(
         get_receipt_service
     ),
-    current_user=Depends(get_current_user),
-    _=Depends(require_permission("receipt.delete")),
+    current_user_id: uuid.UUID = Depends(get_current_user_id),
+    rbac_service: RbacService = Depends(get_rbac_service),
 ):
+    await rbac_service.require_permission(
+        user_id=current_user_id,
+        permission_code="receipt.delete",
+        establishment_id=establishment_id,
+    )
+
     return await service.delete(
         establishment_id=establishment_id,
         receipt_id=receipt_id,

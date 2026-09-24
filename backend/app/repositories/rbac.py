@@ -159,6 +159,26 @@ class UserRoleRepository(BaseRepository[UserRole]):
         result = await self.session.execute(stmt)
         return result.scalar_one_or_none() is not None
 
+    async def get_permission_codes_for_user(
+        self,
+        user_id: uuid.UUID,
+    ) -> list[str]:
+        stmt = (
+            select(Permission.code)
+            .distinct()
+            .join(RolePermission, RolePermission.permission_id == Permission.id)
+            .join(Role, Role.id == RolePermission.role_id)
+            .join(UserRole, UserRole.role_id == Role.id)
+            .where(
+                UserRole.user_id == user_id,
+                UserRole.deleted_at.is_(None),
+            )
+        )
+
+        result = await self.session.execute(stmt)
+
+        return list(result.scalars().all())
+
     async def get_user_role(
             self,
             user_id: uuid.UUID,

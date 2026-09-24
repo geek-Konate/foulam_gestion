@@ -52,6 +52,7 @@ async def create_enrollment(
     await rbac_service.require_permission(
         current_user_id,
         "enrollment.create",
+        establishment_id=establishment_id,
     )
 
     return await service.create_enrollment(
@@ -74,6 +75,7 @@ async def list_enrollments(
     await rbac_service.require_permission(
         current_user_id,
         "enrollment.read",
+        establishment_id=establishment_id,
     )
 
     return await service.list_enrollments(
@@ -96,6 +98,7 @@ async def get_enrollment(
     await rbac_service.require_permission(
         current_user_id,
         "enrollment.read",
+        establishment_id=establishment_id,
     )
 
     return await service.get_enrollment(
@@ -119,6 +122,7 @@ async def update_enrollment(
     await rbac_service.require_permission(
         current_user_id,
         "enrollment.update",
+        establishment_id=establishment_id,
     )
 
     return await service.update_enrollment(
@@ -142,6 +146,7 @@ async def delete_enrollment(
     await rbac_service.require_permission(
         current_user_id,
         "enrollment.delete",
+        establishment_id=establishment_id,
     )
 
     return await service.delete_enrollment(

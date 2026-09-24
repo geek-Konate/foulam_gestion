@@ -35,10 +35,8 @@ from app.repositories.student import (
 )
 
 from app.services.enrollment_service import EnrollmentService
-from app.services.grading_service import GradingService
 from app.services.onboarding_service import OnboardingService
 from app.services.organization_service import OrganizationService
-from app.services.payment_service import PaymentService
 from app.services.rbac_service import RbacService
 
 from app.repositories.invitations import InvitationRepository
@@ -82,32 +80,6 @@ def get_enrollment_service(
     return EnrollmentService(
         enrollment_repo=EnrollmentRepository(session),
         class_repo=ClassRepository(session),
-        student_repo=StudentRepository(session),
-        rbac_service=rbac_service,
-    )
-
-
-def get_grading_service(
-    session: AsyncSession = Depends(get_db),
-    rbac_service: RbacService = Depends(get_rbac_service),
-) -> GradingService:
-    return GradingService(
-        evaluation_repo=EvaluationRepository(session),
-        grade_repo=GradeRepository(session),
-        student_repo=StudentRepository(session),
-        class_repo=ClassRepository(session),
-        rbac_service=rbac_service,
-    )
-
-
-def get_payment_service(
-    session: AsyncSession = Depends(get_db),
-    rbac_service: RbacService = Depends(get_rbac_service),
-) -> PaymentService:
-    return PaymentService(
-        fee_type_repo=FeeTypeRepository(session),
-        payment_repo=PaymentRepository(session),
-        receipt_repo=ReceiptRepository(session),
         student_repo=StudentRepository(session),
         rbac_service=rbac_service,
     )

@@ -3,14 +3,14 @@ import uuid
 from fastapi import APIRouter, Depends
 
 from app.api.deps import (
-    get_current_user,
+    get_current_user_id,
     get_academic_year_repository,
     get_class_repository,
     get_student_repository,
     get_teacher_assignment_repository,
     get_fee_type_repository,
     get_payment_repository,
-    require_organization_permission as require_permission,
+    get_rbac_service,
 )
 
 from app.repositories.student import (
@@ -31,6 +31,7 @@ from app.repositories.finance import (
 from app.schemas.dashboard import EstablishmentDashboardRead, TeacherDashboardRead
 
 from app.services.dashboard import DashboardService, TeacherDashboardService, get_teacher_dashboard_service
+from app.services.rbac_service import RbacService
 
 router = APIRouter()
 
@@ -74,9 +75,15 @@ async def get_establishment_dashboard(
     service: DashboardService = Depends(
         get_dashboard_service
     ),
-    current_user=Depends(get_current_user),
-    _=Depends(require_permission("dashboard.read")),
+    current_user_id: uuid.UUID = Depends(get_current_user_id),
+    rbac_service: RbacService = Depends(get_rbac_service),
 ):
+    await rbac_service.require_permission(
+        user_id=current_user_id,
+        permission_code="dashboard.read",
+        establishment_id=establishment_id,
+    )
+
     return await service.get_establishment_dashboard(
         establishment_id=establishment_id,
     )
@@ -92,9 +99,15 @@ async def get_teacher_dashboard(
     service: TeacherDashboardService = Depends(
         get_teacher_dashboard_service
     ),
-    current_user=Depends(get_current_user),
-    _=Depends(require_permission("dashboard.read")),
+    current_user_id: uuid.UUID = Depends(get_current_user_id),
+    rbac_service: RbacService = Depends(get_rbac_service),
 ):
+    await rbac_service.require_permission(
+        user_id=current_user_id,
+        permission_code="dashboard.read",
+        establishment_id=establishment_id,
+    )
+
     return await service.get_teacher_dashboard(
         establishment_id=establishment_id,
         teacher_id=teacher_id,

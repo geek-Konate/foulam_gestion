@@ -3,9 +3,9 @@ import uuid
 from fastapi import APIRouter, Depends, status
 
 from app.api.deps import (
-    get_current_user,
+    get_current_user_id,
     get_fee_type_repository,
-    require_organization_permission,
+    get_rbac_service,
 )
 
 from app.repositories.finance import FeeTypeRepository
@@ -17,6 +17,7 @@ from app.schemas.finance import (
 )
 
 from app.services.fee_type import FeeTypeService
+from app.services.rbac_service import RbacService
 
 
 router = APIRouter(
@@ -46,9 +47,15 @@ async def create_fee_type(
     service: FeeTypeService = Depends(
         get_fee_type_service
     ),
-    current_user=Depends(get_current_user),
-    _=Depends(require_organization_permission("fee_type.create")),
+    current_user_id: uuid.UUID = Depends(get_current_user_id),
+    rbac_service: RbacService = Depends(get_rbac_service),
 ):
+    await rbac_service.require_permission(
+        user_id=current_user_id,
+        permission_code="fee_type.create",
+        establishment_id=establishment_id,
+    )
+
     return await service.create(
         establishment_id=establishment_id,
         data=data,
@@ -64,9 +71,15 @@ async def list_fee_types(
     service: FeeTypeService = Depends(
         get_fee_type_service
     ),
-    current_user=Depends(get_current_user),
-    _=Depends(require_organization_permission("fee_type.read")),
+    current_user_id: uuid.UUID = Depends(get_current_user_id),
+    rbac_service: RbacService = Depends(get_rbac_service),
 ):
+    await rbac_service.require_permission(
+        user_id=current_user_id,
+        permission_code="fee_type.read",
+        establishment_id=establishment_id,
+    )
+
     return await service.list(
         establishment_id=establishment_id,
     )
@@ -82,9 +95,15 @@ async def get_fee_type(
     service: FeeTypeService = Depends(
         get_fee_type_service
     ),
-    current_user=Depends(get_current_user),
-    _=Depends(require_organization_permission("fee_type.read")),
+    current_user_id: uuid.UUID = Depends(get_current_user_id),
+    rbac_service: RbacService = Depends(get_rbac_service),
 ):
+    await rbac_service.require_permission(
+        user_id=current_user_id,
+        permission_code="fee_type.read",
+        establishment_id=establishment_id,
+    )
+
     return await service.get(
         establishment_id=establishment_id,
         fee_type_id=fee_type_id,
@@ -102,9 +121,15 @@ async def update_fee_type(
     service: FeeTypeService = Depends(
         get_fee_type_service
     ),
-    current_user=Depends(get_current_user),
-    _=Depends(require_organization_permission("fee_type.update")),
+    current_user_id: uuid.UUID = Depends(get_current_user_id),
+    rbac_service: RbacService = Depends(get_rbac_service),
 ):
+    await rbac_service.require_permission(
+        user_id=current_user_id,
+        permission_code="fee_type.update",
+        establishment_id=establishment_id,
+    )
+
     return await service.update(
         establishment_id=establishment_id,
         fee_type_id=fee_type_id,
@@ -122,9 +147,15 @@ async def delete_fee_type(
     service: FeeTypeService = Depends(
         get_fee_type_service
     ),
-    current_user=Depends(get_current_user),
-    _=Depends(require_organization_permission("fee_type.delete")),
+    current_user_id: uuid.UUID = Depends(get_current_user_id),
+    rbac_service: RbacService = Depends(get_rbac_service),
 ):
+    await rbac_service.require_permission(
+        user_id=current_user_id,
+        permission_code="fee_type.delete",
+        establishment_id=establishment_id,
+    )
+
     return await service.delete(
         establishment_id=establishment_id,
         fee_type_id=fee_type_id,

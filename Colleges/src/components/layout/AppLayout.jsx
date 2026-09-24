@@ -7,7 +7,7 @@ import Header from './Header';
 import Sidebar from './Sidebar';
 
 function AppLayout() {
-  const { permissions } = useAuth();
+  const { permissions, scope } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   const handleMenuClick = () => {
@@ -37,7 +37,7 @@ function AppLayout() {
             zIndex: (theme) => theme.zIndex.drawer,
           }}
         >
-          <Sidebar permissions={permissions} />
+          <Sidebar permissions={permissions} scope={scope} />
         </Box>
       )}
 

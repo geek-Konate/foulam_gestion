@@ -40,6 +40,8 @@ class UserRead(TimestampRead):
     email: EmailStr
     phone: str | None
     status: str
+    establishment_id: uuid.UUID | None = None
+    scope: ScopeType = ScopeType.ESTABLISHMENT
     permissions: list[str] = []
 
 

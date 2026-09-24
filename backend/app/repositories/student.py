@@ -73,6 +73,16 @@ class ClassRepository(BaseRepository[Class]):
 class StudentRepository(BaseRepository[Student]):
     model = Student
 
+    async def get_by_establishment(
+        self, establishment_id: uuid.UUID
+    ) -> list[Student]:
+        stmt = select(Student).where(
+            Student.establishment_id == establishment_id,
+            Student.deleted_at.is_(None),
+        )
+        result = await self.session.execute(stmt)
+        return list(result.scalars().all())
+
     async def search_by_name(self, query: str) -> list[Student]:
         pattern = f"%{query}%"
         stmt = select(Student).where(

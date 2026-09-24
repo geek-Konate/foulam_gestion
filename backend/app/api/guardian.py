@@ -40,6 +40,7 @@ async def create_guardian(
     await rbac_service.require_permission(
         current_user_id,
         "guardian.create",
+        establishment_id=establishment_id,
     )
 
     return await guardian_service.create_guardian(
@@ -61,6 +62,7 @@ async def list_guardians(
     await rbac_service.require_permission(
         current_user_id,
         "guardian.read",
+        establishment_id=establishment_id,
     )
 
     return await guardian_service.list_guardians(
@@ -82,6 +84,7 @@ async def get_guardian(
     await rbac_service.require_permission(
         current_user_id,
         "guardian.read",
+        establishment_id=establishment_id,
     )
 
     return await guardian_service.get_guardian(
@@ -105,6 +108,7 @@ async def update_guardian(
     await rbac_service.require_permission(
         current_user_id,
         "guardian.update",
+        establishment_id=establishment_id,
     )
 
     return await guardian_service.update_guardian(
@@ -128,6 +132,7 @@ async def delete_guardian(
     await rbac_service.require_permission(
         current_user_id,
         "guardian.delete",
+        establishment_id=establishment_id,
     )
 
     return await guardian_service.delete_guardian(

@@ -3,11 +3,11 @@ import uuid
 from fastapi import APIRouter, Depends, status
 
 from app.api.deps import (
-    get_current_user,
+    get_current_user_id,
     get_payment_repository,
     get_fee_type_repository,
     get_student_repository,
-    require_organization_permission as require_permission,
+    get_rbac_service,
 )
 
 from app.repositories.finance import (
@@ -23,6 +23,7 @@ from app.schemas.finance import (
 )
 
 from app.services.payment import PaymentService
+from app.services.rbac_service import RbacService
 
 
 router = APIRouter(
@@ -59,13 +60,19 @@ async def create_payment(
     service: PaymentService = Depends(
         get_payment_service
     ),
-    current_user=Depends(get_current_user),
-    _=Depends(require_permission("payment.create")),
+    current_user_id: uuid.UUID = Depends(get_current_user_id),
+    rbac_service: RbacService = Depends(get_rbac_service),
 ):
+    await rbac_service.require_permission(
+        user_id=current_user_id,
+        permission_code="payment.create",
+        establishment_id=establishment_id,
+    )
+
     return await service.create(
         establishment_id=establishment_id,
         data=data,
-        created_by=current_user.id,
+        created_by=current_user_id,
     )
 
 
@@ -79,9 +86,15 @@ async def get_payment(
     service: PaymentService = Depends(
         get_payment_service
     ),
-    current_user=Depends(get_current_user),
-    _=Depends(require_permission("payment.read")),
+    current_user_id: uuid.UUID = Depends(get_current_user_id),
+    rbac_service: RbacService = Depends(get_rbac_service),
 ):
+    await rbac_service.require_permission(
+        user_id=current_user_id,
+        permission_code="payment.read",
+        establishment_id=establishment_id,
+    )
+
     return await service.get(
         establishment_id=establishment_id,
         payment_id=payment_id,
@@ -98,9 +111,15 @@ async def list_student_payments(
     service: PaymentService = Depends(
         get_payment_service
     ),
-    current_user=Depends(get_current_user),
-    _=Depends(require_permission("payment.read")),
+    current_user_id: uuid.UUID = Depends(get_current_user_id),
+    rbac_service: RbacService = Depends(get_rbac_service),
 ):
+    await rbac_service.require_permission(
+        user_id=current_user_id,
+        permission_code="payment.read",
+        establishment_id=establishment_id,
+    )
+
     return await service.list_by_student(
         establishment_id=establishment_id,
         student_id=student_id,
@@ -117,9 +136,15 @@ async def list_fee_type_payments(
     service: PaymentService = Depends(
         get_payment_service
     ),
-    current_user=Depends(get_current_user),
-    _=Depends(require_permission("payment.read")),
+    current_user_id: uuid.UUID = Depends(get_current_user_id),
+    rbac_service: RbacService = Depends(get_rbac_service),
 ):
+    await rbac_service.require_permission(
+        user_id=current_user_id,
+        permission_code="payment.read",
+        establishment_id=establishment_id,
+    )
+
     return await service.list_by_fee_type(
         establishment_id=establishment_id,
         fee_type_id=fee_type_id,
@@ -136,9 +161,15 @@ async def delete_payment(
     service: PaymentService = Depends(
         get_payment_service
     ),
-    current_user=Depends(get_current_user),
-    _=Depends(require_permission("payment.delete")),
+    current_user_id: uuid.UUID = Depends(get_current_user_id),
+    rbac_service: RbacService = Depends(get_rbac_service),
 ):
+    await rbac_service.require_permission(
+        user_id=current_user_id,
+        permission_code="payment.delete",
+        establishment_id=establishment_id,
+    )
+
     return await service.delete(
         establishment_id=establishment_id,
         payment_id=payment_id,
@@ -155,9 +186,15 @@ async def get_student_financial_summary(
     service: PaymentService = Depends(
         get_payment_service
     ),
-    current_user=Depends(get_current_user),
-    _=Depends(require_permission("payment.read")),
+    current_user_id: uuid.UUID = Depends(get_current_user_id),
+    rbac_service: RbacService = Depends(get_rbac_service),
 ):
+    await rbac_service.require_permission(
+        user_id=current_user_id,
+        permission_code="payment.read",
+        establishment_id=establishment_id,
+    )
+
     return await service.financial_summary(
         establishment_id=establishment_id,
         student_id=student_id,

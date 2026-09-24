@@ -3,11 +3,12 @@ import uuid
 from fastapi import APIRouter, Depends, status
 
 from app.api.deps import (
-    get_current_user,
+    get_current_user_id,
     get_report_card_repository,
     get_student_repository,
     get_enrollment_repository,
-    get_academic_year_repository, require_organization_permission,
+    get_academic_year_repository,
+    get_rbac_service,
 )
 
 from app.repositories.academic import ReportCardRepository
@@ -23,6 +24,7 @@ from app.schemas.academic import (
 )
 
 from app.services.report_card import ReportCardService
+from app.services.rbac_service import RbacService
 
 
 router = APIRouter(
@@ -64,9 +66,15 @@ async def create_report_card(
     service: ReportCardService = Depends(
         get_report_card_service
     ),
-    current_user=Depends(get_current_user),
-    _=Depends(require_organization_permission("report_card.generate")),
+    current_user_id: uuid.UUID = Depends(get_current_user_id),
+    rbac_service: RbacService = Depends(get_rbac_service),
 ):
+    await rbac_service.require_permission(
+        user_id=current_user_id,
+        permission_code="report_card.generate",
+        establishment_id=establishment_id,
+    )
+
     return await service.generate(
         establishment_id=establishment_id,
         data=data,
@@ -83,9 +91,15 @@ async def get_report_card(
     service: ReportCardService = Depends(
         get_report_card_service
     ),
-    current_user=Depends(get_current_user),
-    _=Depends(require_organization_permission("report_card.read")),
+    current_user_id: uuid.UUID = Depends(get_current_user_id),
+    rbac_service: RbacService = Depends(get_rbac_service),
 ):
+    await rbac_service.require_permission(
+        user_id=current_user_id,
+        permission_code="report_card.read",
+        establishment_id=establishment_id,
+    )
+
     return await service.get(
         establishment_id=establishment_id,
         report_card_id=report_card_id,
@@ -103,9 +117,15 @@ async def list_student_report_cards(
     service: ReportCardService = Depends(
         get_report_card_service
     ),
-    current_user=Depends(get_current_user),
-    _=Depends(require_organization_permission("report_card.read")),
+    current_user_id: uuid.UUID = Depends(get_current_user_id),
+    rbac_service: RbacService = Depends(get_rbac_service),
 ):
+    await rbac_service.require_permission(
+        user_id=current_user_id,
+        permission_code="report_card.read",
+        establishment_id=establishment_id,
+    )
+
     return await service.list_by_student(
         establishment_id=establishment_id,
         student_id=student_id,

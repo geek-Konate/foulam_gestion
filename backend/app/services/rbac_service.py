@@ -5,10 +5,11 @@ from sqlalchemy import select
 from app.core.exceptions import ConflictException, ForbiddenException, NotFoundException, UnauthorizedException
 from app.core.security import create_access_token, create_refresh_token, hash_password, verify_password
 from app.models import Role
+from app.models.rbac import UserEstablishment, UserRole
 from app.repositories.rbac import (
     PermissionRepository, RolePermissionRepository, RoleRepository, UserRepository, UserRoleRepository,
 )
-from app.schemas.rbac import RoleCreate, UserCreate, ScopeType
+from app.schemas.rbac import RoleCreate, UserCreate, UserRead, ScopeType
 from app.services.invitation_service import InvitationService
 
 
@@ -55,7 +56,62 @@ class RbacService:
         user = await self.user_repo.get(user_id)
         if not user:
             raise UnauthorizedException("Utilisateur introuvable")
-        return user
+
+        permissions = await self.user_role_repo.get_permission_codes_for_user(
+            user_id
+        )
+
+        establishment_id = await self._get_user_establishment_id(user_id)
+        scope = await self._get_user_scope(user_id)
+
+        user_data = UserRead.model_validate(user).model_dump()
+        user_data["permissions"] = permissions
+        user_data["establishment_id"] = establishment_id
+        user_data["scope"] = scope
+
+        return user_data
+
+    async def _get_user_scope(
+        self,
+        user_id: uuid.UUID,
+    ) -> ScopeType:
+        # Hiérarchie : PLATFORM > ORGANIZATION > ESTABLISHMENT.
+        # On retourne le scope le plus haut trouvé.
+        for scope in (ScopeType.PLATFORM, ScopeType.ORGANIZATION, ScopeType.ESTABLISHMENT):
+            stmt = (
+                select(UserRole.role_id)
+                .join(Role, Role.id == UserRole.role_id)
+                .where(
+                    UserRole.user_id == user_id,
+                    Role.scope_type == scope,
+                    UserRole.deleted_at.is_(None),
+                )
+                .limit(1)
+            )
+
+            result = await self.user_repo.session.execute(stmt)
+
+            if result.scalar_one_or_none() is not None:
+                return scope
+
+        return ScopeType.ESTABLISHMENT
+
+    async def _get_user_establishment_id(
+        self,
+        user_id: uuid.UUID,
+    ) -> uuid.UUID | None:
+        stmt = (
+            select(UserEstablishment.establishment_id)
+            .where(
+                UserEstablishment.user_id == user_id,
+                UserEstablishment.deleted_at.is_(None),
+            )
+            .limit(1)
+        )
+
+        result = await self.user_repo.session.execute(stmt)
+
+        return result.scalar_one_or_none()
 
     # --- RBAC ---
 
@@ -209,9 +265,9 @@ class RbacService:
         if not role:
             raise NotFoundException("Rôle introuvable")
 
-        if role.name.lower() != "establishment admin":
+        if not role.is_system:
             raise ConflictException(
-                "Ce rôle n'est pas un rôle Establishment Admin"
+                "Ce rôle n'est pas un rôle système d'établissement"
             )
 
         if role.scope_type.value != "ESTABLISHMENT":
@@ -286,7 +342,9 @@ class RbacService:
         added_permissions = 0
 
         for role in roles:
-            if role.name.lower() != "establishment admin":
+            # Garde de robustesse : on ne cible que les rôles système
+            # d'établissement (is_system), indépendamment du nom.
+            if not role.is_system:
                 continue
 
             existing_permissions = (

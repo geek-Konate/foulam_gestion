@@ -7,6 +7,47 @@ from app.core.database import AsyncSessionLocal
 from app.scripts.seed_permissions import seed_permissions
 from app.scripts.seed_superadmin import seed_superadmin
 
+
+async def run_establishment_permission_sync():
+    """Synchronise les permissions des rôles système d'établissement.
+    Ne doit jamais bloquer le démarrage en cas d'erreur."""
+    try:
+        from app.repositories.rbac import (
+            PermissionRepository,
+            RolePermissionRepository,
+            RoleRepository,
+            UserRepository,
+            UserRoleRepository,
+        )
+        from app.repositories.invitations import InvitationRepository
+        from app.services.invitation_service import InvitationService
+        from app.services.rbac_service import RbacService
+
+        async with AsyncSessionLocal() as session:
+            invitation_repo = InvitationRepository(session)
+
+            rbac_service = RbacService(
+                user_repo=UserRepository(session),
+                role_repo=RoleRepository(session),
+                permission_repo=PermissionRepository(session),
+                role_permission_repo=RolePermissionRepository(session),
+                user_role_repo=UserRoleRepository(session),
+                invitation_service=InvitationService(invitation_repo),
+            )
+
+            result = await rbac_service.sync_all_establishment_admin_permissions()
+
+            print(
+                f"✅ Sync permissions établissement : "
+                f"{result['roles_synced']} rôle(s) synchronisé(s), "
+                f"{result['permissions_added']} permission(s) ajoutée(s)"
+            )
+    except Exception as e:
+        print(
+            f"❌ Échec de la sync des permissions d'établissement "
+            f"(non bloquant) : {type(e).__name__}: {e}"
+        )
+
 # ────────────────────────────────────────────────
 # INITIALISATION FASTAPI
 # ────────────────────────────────────────────────
@@ -71,6 +112,9 @@ async def startup():
         # 2. Super Admin (gère sa propre session)
         await seed_superadmin()
         print("✅ Super Admin prêt")
+
+        # 3. Sync auto des permissions des rôles système d'établissement
+        await run_establishment_permission_sync()
 
         print("✅ Initialisation Authentifia App")
 

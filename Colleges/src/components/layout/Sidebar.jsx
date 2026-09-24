@@ -33,6 +33,13 @@ import { NavLink } from 'react-router-dom';
 
 import navigationData from '../../data/index.json';
 
+// Permissions strictement réservées au niveau platform (Super Admin).
+// Ces entrées ne s'affichent que pour scope === "PLATFORM".
+const PLATFORM_PERMISSIONS = ['onboarding.review'];
+
+// Toute permission module prefix marqué comme réservé côté platform.
+const PLATFORM_MODULE_PREFIXES = ['organization.', 'subscription.'];
+
 const ICONS = {
   Dashboard,
   People,
@@ -56,10 +63,26 @@ const ICONS = {
   School,
 };
 
-function Sidebar({ permissions = [], onNavigate }) {
-  const navigation = navigationData.navigation.filter((item) =>
-    permissions.includes(item.permission)
-  );
+function Sidebar({ permissions = [], scope = null, onNavigate }) {
+  const isPlatform = scope === 'PLATFORM';
+
+  const isPlatformOnly = (permission) => {
+    if (PLATFORM_PERMISSIONS.includes(permission)) return true;
+
+    return PLATFORM_MODULE_PREFIXES.some((prefix) =>
+      permission.startsWith(prefix)
+    );
+  };
+
+  const navigation = navigationData.navigation.filter((item) => {
+    // Uniquement les entrées dont on a la permission.
+    if (!permissions.includes(item.permission)) return false;
+
+    // Les entrées réservées au platform ne s'affichent que pour un admin platform.
+    if (isPlatformOnly(item.permission)) return isPlatform;
+
+    return true;
+  });
 
   return (
     <Box
