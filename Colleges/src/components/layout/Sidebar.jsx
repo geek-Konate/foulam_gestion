@@ -27,18 +27,12 @@ import {
   ListItemButton,
   ListItemIcon,
   ListItemText,
+  Tooltip,
   Typography,
 } from '@mui/material';
 import { NavLink } from 'react-router-dom';
 
 import navigationData from '../../data/index.json';
-
-// Permissions strictement réservées au niveau platform (Super Admin).
-// Ces entrées ne s'affichent que pour scope === "PLATFORM".
-const PLATFORM_PERMISSIONS = ['onboarding.review'];
-
-// Toute permission module prefix marqué comme réservé côté platform.
-const PLATFORM_MODULE_PREFIXES = ['organization.', 'subscription.'];
 
 const ICONS = {
   Dashboard,
@@ -63,38 +57,23 @@ const ICONS = {
   School,
 };
 
-function Sidebar({ permissions = [], scope = null, onNavigate }) {
-  const isPlatform = scope === 'PLATFORM';
-
-  const isPlatformOnly = (permission) => {
-    if (PLATFORM_PERMISSIONS.includes(permission)) return true;
-
-    return PLATFORM_MODULE_PREFIXES.some((prefix) =>
-      permission.startsWith(prefix)
-    );
-  };
-
-  const navigation = navigationData.navigation.filter((item) => {
-    // Uniquement les entrées dont on a la permission.
-    if (!permissions.includes(item.permission)) return false;
-
-    // Les entrées réservées au platform ne s'affichent que pour un admin platform.
-    if (isPlatformOnly(item.permission)) return isPlatform;
-
-    return true;
-  });
+function Sidebar({ permissions = [], collapsed = false }) {
+  const navigation = navigationData.navigation.filter((item) =>
+    permissions.includes(item.permission)
+  );
 
   return (
     <Box
       component="aside"
       sx={{
-        width: 260,
-        height: '100vh',
+        width: '100%',
+        height: '100%',
         display: 'flex',
         flexDirection: 'column',
         borderRight: 1,
         borderColor: 'divider',
         bgcolor: 'background.paper',
+        overflowX: 'hidden',
       }}
     >
       {/* Logo */}
@@ -103,20 +82,24 @@ function Sidebar({ permissions = [], scope = null, onNavigate }) {
           height: 72,
           display: 'flex',
           alignItems: 'center',
-          px: 3,
+          justifyContent: collapsed ? 'center' : 'flex-start',
+          px: collapsed ? 0 : 3,
+          flexShrink: 0,
         }}
       >
         <School
           sx={{
-            mr: 1.5,
+            mr: collapsed ? 0 : 1.5,
             color: 'primary.main',
             fontSize: 30,
           }}
         />
 
-        <Typography variant="h6" fontWeight={700} color="text.primary">
-          Foulam Gestion
-        </Typography>
+        {!collapsed && (
+          <Typography variant="h6" fontWeight={700} color="text.primary">
+            Foulam Gestion
+          </Typography>
+        )}
       </Box>
 
       <Divider />
@@ -124,35 +107,56 @@ function Sidebar({ permissions = [], scope = null, onNavigate }) {
       {/* Navigation */}
       <List
         sx={{
-          px: 1.5,
+          px: collapsed ? 0.5 : 1.5,
           py: 2,
-          overflowY: 'auto',
           flex: 1,
+          overflowY: 'auto',
+          overflowX: 'hidden',
+
+          // Scrollbar fine adaptée au thème
+          scrollbarWidth: 'thin',
+          scrollbarColor: (theme) => `${theme.palette.action.selected} transparent`,
+          '&::-webkit-scrollbar': {
+            width: 6,
+          },
+          '&::-webkit-scrollbar-track': {
+            backgroundColor: 'transparent',
+          },
+          '&::-webkit-scrollbar-thumb': {
+            backgroundColor: (theme) => theme.palette.action.selected,
+            borderRadius: 3,
+            '&:hover': {
+              backgroundColor: (theme) => theme.palette.action.focus,
+            },
+          },
         }}
       >
         {navigation.map((item) => {
           const Icon = ICONS[item.icon];
 
-          return (
+          const button = (
             <ListItemButton
               key={item.path}
               component={NavLink}
               to={item.path}
-              onClick={onNavigate}
               sx={{
                 mb: 0.5,
                 borderRadius: 1.5,
                 color: 'text.secondary',
+                minHeight: 48,
+                justifyContent: collapsed ? 'center' : 'flex-start',
+                px: collapsed ? 1 : 2,
 
                 '& .MuiListItemIcon-root': {
                   color: 'inherit',
-                  minWidth: 40,
+                  minWidth: collapsed ? 0 : 40,
+                  justifyContent: 'center',
+                  mr: collapsed ? 0 : 1,
                 },
 
                 '&.active': {
                   bgcolor: 'primary.main',
                   color: 'primary.contrastText',
-
                   '&:hover': {
                     bgcolor: 'primary.dark',
                   },
@@ -165,14 +169,25 @@ function Sidebar({ permissions = [], scope = null, onNavigate }) {
             >
               <ListItemIcon>{Icon && <Icon />}</ListItemIcon>
 
-              <ListItemText
-                primary={item.label}
-                primaryTypographyProps={{
-                  fontSize: 14,
-                  fontWeight: 500,
-                }}
-              />
+              {!collapsed && (
+                <ListItemText
+                  primary={item.label}
+                  primaryTypographyProps={{
+                    fontSize: 14,
+                    fontWeight: 500,
+                    noWrap: true,
+                  }}
+                />
+              )}
             </ListItemButton>
+          );
+
+          return collapsed ? (
+            <Tooltip key={item.path} title={item.label} placement="right" arrow>
+              {button}
+            </Tooltip>
+          ) : (
+            button
           );
         })}
       </List>

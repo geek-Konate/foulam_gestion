@@ -2,14 +2,7 @@ import uuid
 
 from app.core.exceptions import ConflictException, NotFoundException
 from app.repositories.academic import EvaluationRepository
-from app.repositories.curriculum import (
-    ClassCurriculumRepository,
-    CurriculumSubjectRepository,
-)
-from app.repositories.student import (
-    ClassRepository,
-    AcademicYearRepository,
-)
+from app.repositories.student import ClassRepository, AcademicYearRepository
 
 
 class EvaluationService:
@@ -19,14 +12,10 @@ class EvaluationService:
         evaluation_repo: EvaluationRepository,
         class_repo: ClassRepository,
         academic_year_repo: AcademicYearRepository,
-        class_curriculum_repo: ClassCurriculumRepository,
-        curriculum_subject_repo: CurriculumSubjectRepository,
     ):
         self.evaluation_repo = evaluation_repo
         self.class_repo = class_repo
         self.academic_year_repo = academic_year_repo
-        self.class_curriculum_repo = class_curriculum_repo
-        self.curriculum_subject_repo = curriculum_subject_repo
 
     async def _get_class(
         self,
@@ -52,36 +41,6 @@ class EvaluationService:
 
         return school_class
 
-    async def _validate_subject_for_class(
-        self,
-        class_id: uuid.UUID,
-        subject_id: uuid.UUID,
-    ):
-        class_curriculum = (
-            await self.class_curriculum_repo.get_by_class(
-                class_id
-            )
-        )
-
-        if not class_curriculum:
-            raise ConflictException(
-                "Aucune maquette n'est affectée à cette classe"
-            )
-
-        curriculum_subjects = (
-            await self.curriculum_subject_repo.get_by_curriculum(
-                class_curriculum.curriculum_id
-            )
-        )
-
-        for curriculum_subject in curriculum_subjects:
-            if curriculum_subject.subject_id == subject_id:
-                return curriculum_subject
-
-        raise ConflictException(
-            "Cette matière n'est pas associée à la maquette de cette classe"
-        )
-
     async def create_evaluation(
         self,
         establishment_id: uuid.UUID,
@@ -90,11 +49,6 @@ class EvaluationService:
         await self._get_class(
             establishment_id,
             data.class_id,
-        )
-
-        await self._validate_subject_for_class(
-            data.class_id,
-            data.subject_id,
         )
 
         existing_evaluations = (

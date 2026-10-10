@@ -1,10 +1,40 @@
-import { DarkMode, LightMode, Menu } from '@mui/icons-material';
-import { AppBar, Avatar, IconButton, Toolbar, Tooltip, Typography } from '@mui/material';
+import { DarkMode, LightMode, Logout, Menu } from '@mui/icons-material';
+import {
+  AppBar,
+  Avatar,
+  FormControl,
+  IconButton,
+  InputLabel,
+  MenuItem,
+  Select,
+  Toolbar,
+  Tooltip,
+  Typography,
+} from '@mui/material';
+import { useNavigate } from 'react-router-dom';
 
+import { useAuth } from '../../hooks/useAuth';
 import { useTheme } from '../../hooks/useTheme';
 
 function Header({ onMenuClick }) {
   const { isDark, toggleTheme } = useTheme();
+  const navigate = useNavigate();
+  const {
+    isPlatform,
+    establishments,
+    activeEstablishmentId,
+    selectEstablishment,
+    logout,
+  } = useAuth();
+
+  // Le sélecteur ne concerne que les comptes ayant plusieurs établissements
+  // (admin école multi-école). Le super admin n'a pas d'établissement actif.
+  const showSelector = !isPlatform && establishments.length > 1;
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
 
   return (
     <AppBar
@@ -32,6 +62,25 @@ function Header({ onMenuClick }) {
           Tableau de bord
         </Typography>
 
+        {showSelector && (
+          <FormControl size="small" sx={{ minWidth: 200, mr: 2 }}>
+            <InputLabel id="establishment-select-label">Établissement</InputLabel>
+
+            <Select
+              labelId="establishment-select-label"
+              value={activeEstablishmentId || ''}
+              label="Établissement"
+              onChange={(event) => selectEstablishment(event.target.value)}
+            >
+              {establishments.map((est) => (
+                <MenuItem key={est.id} value={est.id}>
+                  {est.name}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        )}
+
         <Tooltip title={isDark ? 'Activer le mode clair' : 'Activer le mode sombre'}>
           <IconButton onClick={toggleTheme} sx={{ mr: 1 }} aria-label="Changer le thème">
             {isDark ? <LightMode /> : <DarkMode />}
@@ -48,6 +97,12 @@ function Header({ onMenuClick }) {
         >
           U
         </Avatar>
+
+        <Tooltip title="Se déconnecter">
+          <IconButton onClick={handleLogout} sx={{ ml: 1 }} aria-label="Se déconnecter">
+            <Logout />
+          </IconButton>
+        </Tooltip>
       </Toolbar>
     </AppBar>
   );

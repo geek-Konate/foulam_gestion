@@ -8,7 +8,6 @@ from app.schemas.base import TimestampRead
 
 
 class FeeTypeCreate(BaseModel):
-    establishment_id: uuid.UUID
     name: str
     amount: Decimal
 

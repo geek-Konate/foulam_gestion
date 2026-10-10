@@ -1,8 +1,11 @@
 import uuid
 from datetime import datetime, timezone
 
+from sqlalchemy import select
+
 from app.core.exceptions import ConflictException, NotFoundException
 
+from app.models.student import Class
 from app.repositories.academic import ReportCardRepository
 from app.repositories.student import (
     StudentRepository,
@@ -63,19 +66,25 @@ class ReportCardService:
         student_id: uuid.UUID,
         academic_year_id: uuid.UUID,
     ):
-        enrollments = await self.enrollment_repo.get_by_student(
+        enrollment = await self.enrollment_repo.get_active_enrollment(
             student_id
         )
 
-        for enrollment in enrollments:
-            class_ = enrollment.class_
+        if not enrollment:
+            raise NotFoundException(
+                "L'élève n'a pas d'inscription active"
+            )
 
-            if (
-                class_
-                and class_.academic_year_id == academic_year_id
-                and enrollment.status == "active"
-            ):
-                return enrollment
+        # Récupérer la classe explicitement (éviter MissingGreenlet)
+        stmt = select(Class.academic_year_id).where(
+            Class.id == enrollment.class_id,
+            Class.deleted_at.is_(None),
+        )
+        result = await self.enrollment_repo.session.execute(stmt)
+        row = result.scalar_one_or_none()
+
+        if row  and row == academic_year_id:
+            return enrollment
 
         raise NotFoundException(
             "L'élève n'est pas inscrit pour cette année scolaire"
@@ -140,19 +149,24 @@ class ReportCardService:
         self,
         establishment_id: uuid.UUID,
         student_id: uuid.UUID,
-        academic_year_id: uuid.UUID,
+        academic_year_id: uuid.UUID | None = None,
     ):
         await self._get_student(
             establishment_id,
             student_id,
         )
 
-        await self._get_academic_year(
-            establishment_id,
-            academic_year_id,
-        )
+        if academic_year_id is not None:
+            await self._get_academic_year(
+                establishment_id,
+                academic_year_id,
+            )
 
-        return await self.report_card_repo.get_by_student_and_year(
+            return await self.report_card_repo.get_by_student_and_year(
+                student_id,
+                academic_year_id,
+            )
+
+        return await self.report_card_repo.get_by_student(
             student_id,
-            academic_year_id,
         )

@@ -71,20 +71,16 @@ class AttendanceService:
         student_id: uuid.UUID,
         class_id: uuid.UUID,
     ):
-        enrollments = await self.enrollment_repo.get_by_student(
+        enrollment = await self.enrollment_repo.get_active_enrollment(
             student_id
         )
 
-        for enrollment in enrollments:
-            if (
-                enrollment.class_id == class_id
-                and enrollment.status == "active"
-            ):
-                return enrollment
+        if not enrollment or enrollment.class_id != class_id:
+            raise ConflictException(
+                "Cet élève n'est pas inscrit dans cette classe"
+            )
 
-        raise ConflictException(
-            "Cet élève n'est pas inscrit dans cette classe"
-        )
+        return enrollment
 
     async def create_attendance(
         self,

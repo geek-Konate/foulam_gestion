@@ -41,8 +41,6 @@ class SubjectUpdate(BaseModel):
     description: str | None = None
 
 class CurriculumSubjectCreate(BaseModel):
-    curriculum_id: uuid.UUID
-    subject_id: uuid.UUID
     coefficient: int = 1
     weekly_hours: int
 

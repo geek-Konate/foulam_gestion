@@ -1,6 +1,6 @@
 import uuid
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Query, status
 
 from app.api.deps import (
     get_current_user_id,
@@ -28,7 +28,6 @@ from app.services.rbac_service import RbacService
 
 
 router = APIRouter(
-    prefix="/report-cards",
     tags=["report-cards"],
 )
 
@@ -113,7 +112,7 @@ async def get_report_card(
 async def list_student_report_cards(
     establishment_id: uuid.UUID,
     student_id: uuid.UUID,
-    academic_year_id: uuid.UUID,
+    academic_year_id: uuid.UUID | None = None,
     service: ReportCardService = Depends(
         get_report_card_service
     ),

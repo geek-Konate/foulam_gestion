@@ -110,7 +110,6 @@ class GuardianRead(TimestampRead):
 
 
 class StudentGuardianCreate(BaseModel):
-    student_id: uuid.UUID
     guardian_id: uuid.UUID
     relationship_type: str
 

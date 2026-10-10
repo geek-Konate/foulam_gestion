@@ -66,6 +66,17 @@ class AttendanceRepository(BaseRepository[Attendance]):
 class ReportCardRepository(BaseRepository[ReportCard]):
     model = ReportCard
 
+    async def get_by_student(
+        self, student_id: uuid.UUID
+    ) -> list[ReportCard]:
+        stmt = select(ReportCard).where(
+            ReportCard.student_id == student_id,
+            ReportCard.deleted_at.is_(None),
+        ).order_by(ReportCard.generated_at.desc())
+
+        result = await self.session.execute(stmt)
+        return list(result.scalars().all())
+
     async def get_by_student_and_year(
         self, student_id: uuid.UUID, academic_year_id: uuid.UUID
     ) -> list[ReportCard]:
@@ -76,3 +87,18 @@ class ReportCardRepository(BaseRepository[ReportCard]):
         )
         result = await self.session.execute(stmt)
         return list(result.scalars().all())
+
+    async def get_by_student_year_and_period(
+        self,
+        student_id: uuid.UUID,
+        academic_year_id: uuid.UUID,
+        period: str,
+    ) -> ReportCard | None:
+        stmt = select(ReportCard).where(
+            ReportCard.student_id == student_id,
+            ReportCard.academic_year_id == academic_year_id,
+            ReportCard.period == period,
+            ReportCard.deleted_at.is_(None),
+        )
+        result = await self.session.execute(stmt)
+        return result.scalar_one_or_none()

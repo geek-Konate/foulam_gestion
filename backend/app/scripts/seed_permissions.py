@@ -498,6 +498,18 @@ PERMISSIONS = [
         "module": "fee_type",
         "description": "Permet de consulter les types de frais scolaires.",
     },
+    {
+        "code": "fee_type.update",
+        "name": "Modifier un type de frais",
+        "module": "fee_type",
+        "description": "Permet de modifier un type de frais scolaire.",
+    },
+    {
+        "code": "fee_type.delete",
+        "name": "Supprimer un type de frais",
+        "module": "fee_type",
+        "description": "Permet de supprimer un type de frais scolaire.",
+    },
 
     # ============================================================
     # PAYMENT
@@ -529,6 +541,18 @@ PERMISSIONS = [
         "name": "Consulter les reçus",
         "module": "receipt",
         "description": "Permet de consulter les reçus de paiement.",
+    },
+    {
+        "code": "receipt.create",
+        "name": "Créer un reçu",
+        "module": "receipt",
+        "description": "Permet de créer un reçu de paiement.",
+    },
+    {
+        "code": "receipt.delete",
+        "name": "Supprimer un reçu",
+        "module": "receipt",
+        "description": "Permet de supprimer un reçu de paiement.",
     },
 
     # ============================================================

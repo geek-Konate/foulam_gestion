@@ -1,5 +1,7 @@
 import uuid
 
+from dataclasses import dataclass
+
 from fastapi import Depends, HTTPException
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -131,6 +133,48 @@ async def get_current_user_id(
         )
 
     return uuid.UUID(sub)
+
+
+@dataclass
+class CurrentContext:
+    user_id: uuid.UUID
+    organization_id: uuid.UUID | None = None
+    establishment_id: uuid.UUID | None = None
+
+
+async def get_current_context(
+    token: str = Depends(oauth2_scheme),
+) -> CurrentContext:
+    try:
+        payload = decode_token(token)
+    except ValueError:
+        raise HTTPException(
+            status_code=401,
+            detail="Token invalide ou expiré",
+        )
+
+    if payload.get("type") != "access":
+        raise HTTPException(
+            status_code=401,
+            detail="Type de token invalide",
+        )
+
+    sub = payload.get("sub")
+
+    if not sub:
+        raise HTTPException(
+            status_code=401,
+            detail="Token malformé",
+        )
+
+    org_id_raw = payload.get("organization_id")
+    est_id_raw = payload.get("establishment_id")
+
+    return CurrentContext(
+        user_id=uuid.UUID(sub),
+        organization_id=uuid.UUID(org_id_raw) if org_id_raw else None,
+        establishment_id=uuid.UUID(est_id_raw) if est_id_raw else None,
+    )
 
 
 async def get_current_user(

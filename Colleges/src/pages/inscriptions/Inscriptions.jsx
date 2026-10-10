@@ -1,0 +1,205 @@
+import { useState } from 'react';
+
+import {
+  Alert,
+  Box,
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
+  Typography,
+} from '@mui/material';
+import { Add, Refresh } from '@mui/icons-material';
+
+import Form from '../../components/inscriptions/Form';
+import List from '../../components/inscriptions/List';
+import { useInscriptions } from '../../hooks/useInscriptions';
+import { useEleves } from '../../hooks/useEleves';
+import { useClasses } from '../../hooks/useClasses';
+import { useAuth } from '../../hooks/useAuth';
+
+function Inscriptions() {
+  const { activeEstablishmentId } = useAuth();
+
+  const {
+    inscriptions,
+    loading,
+    error,
+    saving,
+    refresh,
+    createInscription,
+    updateInscription,
+    removeInscription,
+  } = useInscriptions(activeEstablishmentId);
+
+  const { eleves } = useEleves(activeEstablishmentId);
+  const { classes } = useClasses(activeEstablishmentId);
+
+  const [formOpen, setFormOpen] = useState(false);
+  const [editingInscription, setEditingInscription] = useState(null);
+
+  const [toDelete, setToDelete] = useState(null);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  const handleOpenAdd = () => {
+    setEditingInscription(null);
+    setFormOpen(true);
+  };
+
+  const handleOpenEdit = (inscription) => {
+    setEditingInscription(inscription);
+    setFormOpen(true);
+  };
+
+  const handleCloseForm = () => {
+    if (saving) return;
+    setFormOpen(false);
+    setEditingInscription(null);
+  };
+
+  const handleSave = async (data) => {
+    try {
+      if (editingInscription) {
+        await updateInscription(editingInscription.id, data);
+      } else {
+        await createInscription(data);
+      }
+
+      setFormOpen(false);
+      setEditingInscription(null);
+    } catch {
+      // L'erreur est déjà exposée par le hook.
+    }
+  };
+
+  const handleOpenDelete = (inscription) => {
+    setToDelete(inscription);
+    setDeleteOpen(true);
+  };
+
+  const handleCloseDelete = () => {
+    if (deleting) return;
+    setDeleteOpen(false);
+    setToDelete(null);
+  };
+
+  const handleDelete = async () => {
+    if (!toDelete) return;
+
+    try {
+      setDeleting(true);
+      await removeInscription(toDelete.id);
+      setDeleteOpen(false);
+      setToDelete(null);
+    } catch {
+      // L'erreur est déjà exposée par le hook.
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  return (
+    <Box>
+      <Box
+        sx={{
+          mb: 4,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+        }}
+      >
+        <Box>
+          <Typography variant="h4" fontWeight={700} gutterBottom>
+            Inscriptions
+          </Typography>
+
+          <Typography variant="body1" color="text.secondary">
+            Inscrivez les élèves dans les classes de votre établissement.
+          </Typography>
+        </Box>
+
+        <Box>
+          <Button
+            variant="outlined"
+            startIcon={<Refresh />}
+            onClick={refresh}
+            sx={{ mr: 1 }}
+          >
+            Actualiser
+          </Button>
+
+          <Button variant="contained" startIcon={<Add />} onClick={handleOpenAdd}>
+            Ajouter
+          </Button>
+        </Box>
+      </Box>
+
+      {!activeEstablishmentId && (
+        <Alert severity="info" sx={{ mb: 3 }}>
+          Aucun établissement sélectionné. Utilisez le sélecteur
+          d'établissement dans l'en-tête.
+        </Alert>
+      )}
+
+      {error && (
+        <Alert severity="error" sx={{ mb: 3 }}>
+          {error}
+        </Alert>
+      )}
+
+      <List
+        inscriptions={inscriptions}
+        eleves={eleves}
+        classes={classes}
+        loading={loading}
+        onEdit={handleOpenEdit}
+        onDelete={handleOpenDelete}
+      />
+
+      <Form
+        open={formOpen}
+        editingInscription={editingInscription}
+        eleves={eleves}
+        classes={classes}
+        saving={saving}
+        onClose={handleCloseForm}
+        onSave={handleSave}
+      />
+
+      <Dialog
+        open={deleteOpen}
+        onClose={handleCloseDelete}
+        aria-labelledby="delete-inscription-title"
+      >
+        <DialogTitle id="delete-inscription-title">Supprimer</DialogTitle>
+
+        <DialogContent>
+          <DialogContentText>
+            Voulez-vous vraiment supprimer cette inscription ? Cette action est
+            irréversible.
+          </DialogContentText>
+        </DialogContent>
+
+        <DialogActions>
+          <Button onClick={handleCloseDelete} disabled={deleting}>
+            Annuler
+          </Button>
+
+          <Button
+            variant="contained"
+            color="error"
+            onClick={handleDelete}
+            disabled={deleting}
+          >
+            Supprimer
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </Box>
+  );
+}
+
+export default Inscriptions;

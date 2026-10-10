@@ -1,6 +1,9 @@
 import uuid
 
+from sqlalchemy import select
+
 from app.core.exceptions import ConflictException, NotFoundException
+from app.models.rbac import UserEstablishment
 from app.repositories.curriculum import (
     TeacherAssignmentRepository,
     ClassCurriculumRepository,
@@ -63,12 +66,15 @@ class TeacherAssignmentService:
         if not user:
             raise NotFoundException("Utilisateur introuvable")
 
-        belongs_to_establishment = any(
-            item.establishment_id == establishment_id
-            for item in user.user_establishments
+        stmt = select(UserEstablishment).where(
+            UserEstablishment.user_id == user_id,
+            UserEstablishment.establishment_id == establishment_id,
+            UserEstablishment.deleted_at.is_(None),
         )
+        result = await self.user_repo.session.execute(stmt)
+        user_establishment = result.scalar_one_or_none()
 
-        if not belongs_to_establishment:
+        if not user_establishment:
             raise NotFoundException(
                 "Utilisateur introuvable dans cet établissement"
             )
@@ -104,26 +110,12 @@ class TeacherAssignmentService:
                 "Matière de la maquette introuvable"
             )
 
-        # Vérifier que la classe possède une maquette
-        class_curriculum = (
-            await self.class_curriculum_repo.get_by_class(
-                class_id
-            )
-        )
-
-        if not class_curriculum:
+        # Vérification : le CurriculumSubject appartient bien
+        # à une maquette (sans exiger ClassCurriculum, car dans notre
+        # modèle la maquette est liée au niveau, pas directement à la classe).
+        if not curriculum_subject.curriculum_id:
             raise ConflictException(
-                "Aucune maquette n'est affectée à cette classe"
-            )
-
-        # Vérifier que le CurriculumSubject appartient
-        # à la maquette affectée à cette classe
-        if (
-            curriculum_subject.curriculum_id
-            != class_curriculum.curriculum_id
-        ):
-            raise ConflictException(
-                "Cette matière n'appartient pas à la maquette de cette classe"
+                "Cette matière n'est rattachée à aucune maquette"
             )
 
         # Vérifier qu'il n'existe pas déjà la même affectation

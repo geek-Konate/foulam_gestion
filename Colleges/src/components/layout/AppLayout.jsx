@@ -7,12 +7,14 @@ import Header from './Header';
 import Sidebar from './Sidebar';
 
 function AppLayout() {
-  const { permissions, scope } = useAuth();
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const { permissions } = useAuth();
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
 
   const handleMenuClick = () => {
-    setSidebarOpen((prev) => !prev);
+    setSidebarCollapsed((prev) => !prev);
   };
+
+  const sidebarWidth = sidebarCollapsed ? 72 : 260;
 
   return (
     <Box
@@ -25,21 +27,20 @@ function AppLayout() {
       {/* Header fixe */}
       <Header onMenuClick={handleMenuClick} />
 
-      {/* Sidebar fixe */}
-      {sidebarOpen && (
-        <Box
-          sx={{
-            position: 'fixed',
-            top: '72px',
-            left: 0,
-            bottom: 0,
-            width: 260,
-            zIndex: (theme) => theme.zIndex.drawer,
-          }}
-        >
-          <Sidebar permissions={permissions} scope={scope} />
-        </Box>
-      )}
+      {/* Sidebar fixe (toujours visible) */}
+      <Box
+        sx={{
+          position: 'fixed',
+          top: '72px',
+          left: 0,
+          bottom: 0,
+          width: sidebarWidth,
+          zIndex: (theme) => theme.zIndex.drawer,
+          transition: 'width 0.2s ease',
+        }}
+      >
+        <Sidebar permissions={permissions} collapsed={sidebarCollapsed} />
+      </Box>
 
       {/* Contenu scrollable */}
       <Box
@@ -49,9 +50,26 @@ function AppLayout() {
           top: '72px',
           right: 0,
           bottom: 0,
-          left: sidebarOpen ? '260px' : 0,
+          left: `${sidebarWidth}px`,
           overflowY: 'auto',
           transition: 'left 0.2s ease',
+          // Scrollbar fine et adaptée au thème
+          scrollbarWidth: 'thin',
+          scrollbarColor: (theme) => `${theme.palette.action.selected} transparent`,
+          '&::-webkit-scrollbar': {
+            width: 6,
+            height: 6,
+          },
+          '&::-webkit-scrollbar-track': {
+            backgroundColor: 'transparent',
+          },
+          '&::-webkit-scrollbar-thumb': {
+            backgroundColor: (theme) => theme.palette.action.selected,
+            borderRadius: 3,
+            '&:hover': {
+              backgroundColor: (theme) => theme.palette.action.focus,
+            },
+          },
         }}
       >
         <Box sx={{ p: 3 }}>

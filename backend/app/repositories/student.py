@@ -83,10 +83,14 @@ class StudentRepository(BaseRepository[Student]):
         result = await self.session.execute(stmt)
         return list(result.scalars().all())
 
-    async def search_by_name(self, query: str) -> list[Student]:
-        pattern = f"%{query}%"
+    async def search_by_name(
+        self,
+        first_name: str,
+        last_name: str,
+    ) -> list[Student]:
         stmt = select(Student).where(
-            (Student.first_name.ilike(pattern)) | (Student.last_name.ilike(pattern)),
+            Student.first_name.ilike(first_name),
+            Student.last_name.ilike(last_name),
             Student.deleted_at.is_(None),
         )
         result = await self.session.execute(stmt)

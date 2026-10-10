@@ -102,10 +102,12 @@ async def create_grade(
         establishment_id=establishment_id,
     )
 
+    # Injecter l'utilisateur connecté comme enseignant
+    data.teacher_id = current_user_id
+
     return await grade_service.create_grade(
         establishment_id=establishment_id,
         data=data,
-        teacher_id=current_user_id,
     )
 
 

@@ -7,22 +7,40 @@
       "permission": "dashboard.read"
     },
     {
-      "label": "Élèves",
-      "path": "/students",
-      "icon": "People",
-      "permission": "student.read"
-    },
-    {
-      "label": "Classes",
-      "path": "/classes",
-      "icon": "Class",
-      "permission": "class.read"
-    },
-    {
-      "label": "Inscriptions",
-      "path": "/enrollments",
+      "label": "Demandes d'onboarding",
+      "path": "/onboarding/requests",
       "icon": "HowToReg",
-      "permission": "enrollment.read"
+      "permission": "onboarding.review"
+    },
+    {
+      "label": "Organisations",
+      "path": "/organizations",
+      "icon": "Business",
+      "permission": "organization.read"
+    },
+    {
+      "label": "Abonnements",
+      "path": "/subscriptions",
+      "icon": "CreditCard",
+      "permission": "subscription.read"
+    },
+    {
+      "label": "Établissement",
+      "path": "/establishment",
+      "icon": "School",
+      "permission": "establishment.read"
+    },
+    {
+      "label": "Utilisateurs",
+      "path": "/users",
+      "icon": "ManageAccounts",
+      "permission": "user.read"
+    },
+    {
+      "label": "Rôles",
+      "path": "/roles",
+      "icon": "AdminPanelSettings",
+      "permission": "role.manage"
     },
     {
       "label": "Années scolaires",
@@ -37,10 +55,40 @@
       "permission": "level.read"
     },
     {
+      "label": "Classes",
+      "path": "/classes",
+      "icon": "Class",
+      "permission": "class.read"
+    },
+    {
+      "label": "Élèves",
+      "path": "/students",
+      "icon": "People",
+      "permission": "student.read"
+    },
+    {
       "label": "Responsables",
       "path": "/guardians",
       "icon": "FamilyRestroom",
       "permission": "guardian.read"
+    },
+    {
+      "label": "Élève-Résponsables",
+      "path": "/student-guardians",
+      "icon": "FamilyRestroom",
+      "permission": "guardian.read"
+    },
+    {
+      "label": "Inscriptions",
+      "path": "/enrollments",
+      "icon": "HowToReg",
+      "permission": "enrollment.read"
+    },
+    {
+      "label": "Matières",
+      "path": "/subjects",
+      "icon": "MenuBook",
+      "permission": "subject.read"
     },
     {
       "label": "Maquettes",
@@ -49,10 +97,10 @@
       "permission": "curriculum.read"
     },
     {
-      "label": "Matières",
-      "path": "/subjects",
+      "label": "Matières des maquettes",
+      "path": "/curriculum-subjects",
       "icon": "MenuBook",
-      "permission": "subject.read"
+      "permission": "curriculum.read"
     },
     {
       "label": "Affectations enseignants",
@@ -101,24 +149,6 @@
       "path": "/receipts",
       "icon": "Receipt",
       "permission": "receipt.read"
-    },
-    {
-      "label": "Utilisateurs",
-      "path": "/users",
-      "icon": "ManageAccounts",
-      "permission": "user.read"
-    },
-    {
-      "label": "Rôles",
-      "path": "/roles",
-      "icon": "AdminPanelSettings",
-      "permission": "role.manage"
-    },
-    {
-      "label": "Établissement",
-      "path": "/establishment",
-      "icon": "School",
-      "permission": "establishment.read"
     }
   ]
 }

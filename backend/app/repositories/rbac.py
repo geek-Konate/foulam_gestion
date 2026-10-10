@@ -139,6 +139,22 @@ class UserRoleRepository(BaseRepository[UserRole]):
             .where(UserRole.user_id == user_id, Permission.code == permission_code)
         )
 
+        from sqlalchemy import or_
+
+        # ─────────────────────────────────────────────────────────────
+        # Aucun contexte précisé : la ressource est globale (ex. /levels,
+        # /subjects), donc la permission est acceptée si l'utilisateur la
+        # possède via n'importe lequel de ses rôles (PLATFORM, ORGANIZATION,
+        # ESTABLISHMENT), sans restriction d'appartenance.
+        # ─────────────────────────────────────────────────────────────
+        if organization_id is None and establishment_id is None:
+            stmt = stmt.where(
+                UserRole.deleted_at.is_(None),
+                Role.deleted_at.is_(None),
+            )
+            result = await self.session.execute(stmt)
+            return result.scalar_one_or_none() is not None
+
         # PLATFORM : aucun scope à vérifier, la permission s'applique partout
         # ORGANIZATION : le user_role doit correspondre à l'organization_id demandé
         # ESTABLISHMENT : le user_role doit correspondre à l'establishment_id demandé
@@ -153,7 +169,6 @@ class UserRoleRepository(BaseRepository[UserRole]):
                 (Role.scope_type == "ESTABLISHMENT") & (UserRole.establishment_id == establishment_id)
             )
 
-        from sqlalchemy import or_
         stmt = stmt.where(or_(*conditions))
 
         result = await self.session.execute(stmt)

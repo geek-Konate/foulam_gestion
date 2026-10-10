@@ -11,7 +11,7 @@ import {
   DialogTitle,
   Typography,
 } from '@mui/material';
-import { Add } from '@mui/icons-material';
+import { Add, Refresh } from '@mui/icons-material';
 
 import Form from '../../components/annees_scolaires/Form';
 import List from '../../components/annees_scolaires/List';
@@ -19,18 +19,18 @@ import { useAnneesScolaires } from '../../hooks/useAnneesScolaires';
 import { useAuth } from '../../hooks/useAuth';
 
 function AnneesScolaires() {
-  const { user } = useAuth();
-  const establishmentId = user?.establishment_id;
+  const { activeEstablishmentId } = useAuth();
 
   const {
     annees,
     loading,
     error,
     saving,
+    refresh,
     createAnnee,
     updateAnnee,
     removeAnnee,
-  } = useAnneesScolaires(establishmentId);
+  } = useAnneesScolaires(activeEstablishmentId);
 
   const [formOpen, setFormOpen] = useState(false);
   const [editingAnnee, setEditingAnnee] = useState(null);
@@ -116,14 +116,32 @@ function AnneesScolaires() {
           </Typography>
         </Box>
 
-        <Button
-          variant="contained"
-          startIcon={<Add />}
-          onClick={handleOpenAdd}
-        >
-          Ajouter
-        </Button>
+        <Box>
+          <Button
+            variant="outlined"
+            startIcon={<Refresh />}
+            onClick={refresh}
+            sx={{ mr: 1 }}
+          >
+            Actualiser
+          </Button>
+
+          <Button
+            variant="contained"
+            startIcon={<Add />}
+            onClick={handleOpenAdd}
+          >
+            Ajouter
+          </Button>
+        </Box>
       </Box>
+
+      {!activeEstablishmentId && (
+        <Alert severity="info" sx={{ mb: 3 }}>
+          Aucun établissement sélectionné. Utilisez le sélecteur
+          d'établissement dans l'en-tête pour choisir un établissement.
+        </Alert>
+      )}
 
       {error && (
         <Alert severity="error" sx={{ mb: 3 }}>

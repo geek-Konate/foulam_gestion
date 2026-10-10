@@ -66,6 +66,9 @@ export const AuthAPI = {
 
   me: () => API.get('/auth/me'),
 
+  selectEstablishment: (establishmentId) =>
+    API.post(`/auth/select-establishment/${establishmentId}`),
+
   acceptInvitation: (data) => API.post('/auth/accept-invitation', data),
 };
 
@@ -265,6 +268,25 @@ export const ClassesAPI = {
 };
 
 // ============================================================
+// STUDENTS
+// ============================================================
+
+export const StudentsAPI = {
+  getAll: (establishmentId) => API.get(`/establishments/${establishmentId}/students`),
+
+  getById: (establishmentId, studentId) =>
+    API.get(`/establishments/${establishmentId}/students/${studentId}`),
+
+  create: (establishmentId, data) => API.post(`/establishments/${establishmentId}/students`, data),
+
+  update: (establishmentId, studentId, data) =>
+    API.patch(`/establishments/${establishmentId}/students/${studentId}`, data),
+
+  remove: (establishmentId, studentId) =>
+    API.delete(`/establishments/${establishmentId}/students/${studentId}`),
+};
+
+// ============================================================
 // GUARDIANS
 // ============================================================
 
@@ -352,6 +374,21 @@ export const CurriculumsAPI = {
 
   remove: (establishmentId, curriculumId) =>
     API.delete(`/establishments/${establishmentId}/curriculums/${curriculumId}`),
+};
+
+// ============================================================
+// CLASS CURRICULUM
+// ============================================================
+
+export const ClassCurriculumAPI = {
+  get: (establishmentId, classId) =>
+    API.get(`/establishments/${establishmentId}/classes/${classId}/curriculum`),
+
+  assign: (establishmentId, classId, curriculumId) =>
+    API.post(`/establishments/${establishmentId}/classes/${classId}/curriculum/${curriculumId}`),
+
+  remove: (establishmentId, classId) =>
+    API.delete(`/establishments/${establishmentId}/classes/${classId}/curriculum`),
 };
 
 // ============================================================

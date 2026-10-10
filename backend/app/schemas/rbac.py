@@ -6,6 +6,11 @@ from pydantic import BaseModel, EmailStr
 from app.schemas.base import TimestampRead
 
 
+class EstablishmentBrief(BaseModel):
+    id: uuid.UUID
+    name: str
+
+
 # ─────────────────────────────────────────────
 # SCOPE
 # ─────────────────────────────────────────────
@@ -43,6 +48,7 @@ class UserRead(TimestampRead):
     establishment_id: uuid.UUID | None = None
     scope: ScopeType = ScopeType.ESTABLISHMENT
     permissions: list[str] = []
+    establishments: list[EstablishmentBrief] = []
 
 
 # ─────────────────────────────────────────────

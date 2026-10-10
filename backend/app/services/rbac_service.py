@@ -5,11 +5,12 @@ from sqlalchemy import select
 from app.core.exceptions import ConflictException, ForbiddenException, NotFoundException, UnauthorizedException
 from app.core.security import create_access_token, create_refresh_token, hash_password, verify_password
 from app.models import Role
+from app.models.organization import Establishment
 from app.models.rbac import UserEstablishment, UserRole
 from app.repositories.rbac import (
     PermissionRepository, RolePermissionRepository, RoleRepository, UserRepository, UserRoleRepository,
 )
-from app.schemas.rbac import RoleCreate, UserCreate, UserRead, ScopeType
+from app.schemas.rbac import RoleCreate, UserCreate, UserRead, ScopeType, EstablishmentBrief
 from app.services.invitation_service import InvitationService
 
 
@@ -68,6 +69,9 @@ class RbacService:
         user_data["permissions"] = permissions
         user_data["establishment_id"] = establishment_id
         user_data["scope"] = scope
+        user_data["establishments"] = await self._get_user_establishments(
+            user_id, scope
+        )
 
         return user_data
 
@@ -112,6 +116,56 @@ class RbacService:
         result = await self.user_repo.session.execute(stmt)
 
         return result.scalar_one_or_none()
+
+    async def _get_user_establishments(
+        self,
+        user_id: uuid.UUID,
+        scope: ScopeType,
+    ) -> list[EstablishmentBrief]:
+        if scope == ScopeType.PLATFORM:
+            # Le Super Admin voit tous les établissements de la plateforme
+            stmt = (
+                select(Establishment.id, Establishment.name)
+                .where(Establishment.deleted_at.is_(None))
+                .order_by(Establishment.name)
+            )
+            result = await self.user_repo.session.execute(stmt)
+            return [
+                EstablishmentBrief(id=row.id, name=row.name)
+                for row in result.all()
+            ]
+
+        # Pour les autres rôles (ESTABLISHMENT / ORGANIZATION), on combine
+        # deux sources d'établissements accessibles :
+        #  1. les liaisons explicites via user_establishments ;
+        #  2. les établissements portés par un UserRole (UserRole.establishment_id).
+        by_user_est = select(Establishment.id, Establishment.name).join(
+            UserEstablishment,
+            UserEstablishment.establishment_id == Establishment.id,
+        ).where(
+            UserEstablishment.user_id == user_id,
+            UserEstablishment.deleted_at.is_(None),
+            Establishment.deleted_at.is_(None),
+        )
+
+        by_role = select(Establishment.id, Establishment.name).join(
+            UserRole,
+            UserRole.establishment_id == Establishment.id,
+        ).where(
+            UserRole.user_id == user_id,
+            UserRole.establishment_id.is_not(None),
+            UserRole.deleted_at.is_(None),
+            Establishment.deleted_at.is_(None),
+        )
+
+        combined = by_user_est.union(by_role).order_by(Establishment.name)
+
+        result = await self.user_repo.session.execute(combined)
+
+        return [
+            EstablishmentBrief(id=row.id, name=row.name)
+            for row in result.all()
+        ]
 
     # --- RBAC ---
 

@@ -9,17 +9,11 @@ from app.api.deps import (
     get_evaluation_repository,
     get_class_repository,
     get_academic_year_repository,
-    get_class_curriculum_repository,
-    get_curriculum_subject_repository,
 )
 from app.repositories.academic import EvaluationRepository
 from app.repositories.student import (
     ClassRepository,
     AcademicYearRepository,
-)
-from app.repositories.curriculum import (
-    ClassCurriculumRepository,
-    CurriculumSubjectRepository,
 )
 from app.schemas.academic import (
     EvaluationCreate,
@@ -45,19 +39,11 @@ def get_evaluation_service(
     academic_year_repo: AcademicYearRepository = Depends(
         get_academic_year_repository
     ),
-    class_curriculum_repo: ClassCurriculumRepository = Depends(
-        get_class_curriculum_repository
-    ),
-    curriculum_subject_repo: CurriculumSubjectRepository = Depends(
-        get_curriculum_subject_repository
-    ),
 ) -> EvaluationService:
     return EvaluationService(
         evaluation_repo=evaluation_repo,
         class_repo=class_repo,
         academic_year_repo=academic_year_repo,
-        class_curriculum_repo=class_curriculum_repo,
-        curriculum_subject_repo=curriculum_subject_repo,
     )
 
 
