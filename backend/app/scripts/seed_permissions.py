@@ -1,7 +1,12 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.rbac import Permission
+from app.models.rbac import (
+    Permission,
+    Role,
+    RolePermission,
+    ScopeType,
+)
 
 
 PERMISSIONS = [
@@ -603,4 +608,86 @@ async def seed_permissions(session: AsyncSession) -> dict:
         "created": created,
         "existing": existing,
         "total": len(PERMISSIONS),
+    }
+async def seed_system_roles(session: AsyncSession) -> dict:
+    created = 0
+    existing = 0
+    permissions_added = 0
+
+    for role_data in SYSTEM_ROLES.values():
+        scope_type = ScopeType(role_data["scope_type"])
+
+        result = await session.execute(
+            select(Role).where(
+                Role.name == role_data["name"],
+                Role.scope_type == scope_type,
+                Role.organization_id.is_(None),
+                Role.establishment_id.is_(None),
+                Role.deleted_at.is_(None),
+            )
+        )
+        role = result.scalar_one_or_none()
+
+        if role is None:
+            role = Role(
+                name=role_data["name"],
+                description=role_data["description"],
+                scope_type=scope_type,
+                organization_id=None,
+                establishment_id=None,
+                is_system=True,
+            )
+            session.add(role)
+            await session.flush()
+            created += 1
+        else:
+            role.is_system = True
+            existing += 1
+
+        # Charger toutes les associations déjà présentes,
+        # y compris celles qui ont été supprimées logiquement.
+        result = await session.execute(
+            select(RolePermission).where(
+                RolePermission.role_id == role.id
+            )
+        )
+        associations = result.scalars().all()
+        associations_by_permission = {
+            association.permission_id: association
+            for association in associations
+        }
+
+        # Récupérer les permissions actives.
+        result = await session.execute(
+            select(Permission).where(
+                Permission.deleted_at.is_(None)
+            )
+        )
+        permissions = result.scalars().all()
+
+        for permission in permissions:
+            association = associations_by_permission.get(permission.id)
+
+            if association is not None:
+                # Réactiver une association supprimée logiquement.
+                if association.deleted_at is not None:
+                    association.deleted_at = None
+                    permissions_added += 1
+                continue
+
+            session.add(
+                RolePermission(
+                    role_id=role.id,
+                    permission_id=permission.id,
+                )
+            )
+            permissions_added += 1
+
+    await session.commit()
+
+    return {
+        "created": created,
+        "existing": existing,
+        "permissions_added": permissions_added,
+        "total": len(SYSTEM_ROLES),
     }
