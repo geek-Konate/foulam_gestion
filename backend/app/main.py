@@ -4,7 +4,11 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.database import AsyncSessionLocal
-from app.scripts.seed_permissions import seed_permissions
+#from app.scripts.seed_permissions import seed_permissions
+from app.scripts.seed_permissions import (
+    seed_permissions,
+    seed_system_roles,
+)
 from app.scripts.seed_superadmin import seed_superadmin
 
 
@@ -110,9 +114,19 @@ async def startup():
             )
 
         # 2. Super Admin (gère sa propre session)
+        # await seed_superadmin()
+        # print("✅ Super Admin prêt")
+    # 2. Créer les rôles système
+        async with AsyncSessionLocal() as session:
+            result = await seed_system_roles(session)
+            print(
+            f"✅ Rôles système : {result['created']} créés, "
+            f"{result['existing']} existants"
+            )
+
+    # 3. Super Admin (gère sa propre session)
         await seed_superadmin()
         print("✅ Super Admin prêt")
-
         # 3. Sync auto des permissions des rôles système d'établissement
         await run_establishment_permission_sync()
 
